@@ -1,0 +1,77 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  SGEFS:
+    Type: String
+  SystemName:
+    Type: String
+Resources:
+  BlogEFSMySQL:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      BackupPolicy:
+        Status: ENABLED
+      Encrypted: True
+      LifecyclePolicies:
+        - TransitionToIA: AFTER_7_DAYS
+        - TransitionToPrimaryStorageClass: AFTER_1_ACCESS
+      FileSystemTags:
+        - Key: Name
+          Value: !Sub ${SystemName}-MySQL
+  BlogEFSMySQLMountTargetA:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref BlogEFSMySQL
+      SecurityGroups:
+        - !Ref SGEFS
+      SubnetId: !ImportValue VPC-PrivateSubnetIdDHCPA
+  BlogEFSMySQLMountTargetC:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref BlogEFSMySQL
+      SecurityGroups:
+        - !Ref SGEFS
+      SubnetId: !ImportValue VPC-PrivateSubnetIdDHCPC
+  BlogEFSMySQLMountTargetD:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref BlogEFSMySQL
+      SecurityGroups:
+        - !Ref SGEFS
+      SubnetId: !ImportValue VPC-PrivateSubnetIdDHCPD
+
+  BlogEFSWordpress:
+    Type: AWS::EFS::FileSystem
+    Properties:
+      BackupPolicy:
+        Status: ENABLED
+      Encrypted: True
+      FileSystemTags:
+        - Key: Name
+          Value: !Sub ${SystemName}-Wordpress
+  BlogEFSWordpressMountTargetA:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref BlogEFSWordpress
+      SecurityGroups:
+        - !Ref SGEFS
+      SubnetId: !ImportValue VPC-PrivateSubnetIdDHCPA
+  BlogEFSWordpressMountTargetC:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref BlogEFSWordpress
+      SecurityGroups:
+        - !Ref SGEFS
+      SubnetId: !ImportValue VPC-PrivateSubnetIdDHCPC
+  BlogEFSWordpressMountTargetD:
+    Type: AWS::EFS::MountTarget
+    Properties:
+      FileSystemId: !Ref BlogEFSWordpress
+      SecurityGroups:
+        - !Ref SGEFS
+      SubnetId: !ImportValue VPC-PrivateSubnetIdDHCPD
+Outputs:
+  EFSMySQL:
+    Value: !Ref BlogEFSMySQL
+  EFSWordpress:
+    Value: !Ref BlogEFSWordpress

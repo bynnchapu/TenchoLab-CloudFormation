@@ -1,0 +1,183 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  SystemName:
+    Type: String
+  S3Arn:
+    Type: String
+  S3MediaArn:
+    Type: String
+Resources:
+  BlogIAMECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${SystemName}ECSTaskExecutionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: AllowGetSecret
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: AllowGetParameter
+                Effect: Allow
+                Action:
+                  - ssm:GetParameters
+                Resource: "arn:aws:ssm:ap-northeast-1:499862365437:parameter/System/Blog/*"
+              - Sid: AllowDecryptSSMKey
+                Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource:
+                  # Managed key alias of alias/aws/ssm
+                  - 'arn:aws:kms:ap-northeast-1:499862365437:key/0e99ac32-deea-4bae-adf5-7744cc3ac3bb'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+  BlogIAMCodeBuildServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${SystemName}CodeBuildServiceRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: CodeBuild
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Resource:
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/*"
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+              - Effect: Allow
+                Resource:
+                  - !Sub ${S3Arn}/*
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketAcl
+                  - s3:GetBucketLocation
+              - Effect: Allow
+                Resource:
+                  - !Sub arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*
+                Action:
+                  - codebuild:CreateReportGroup
+                  - codebuild:CreateReport
+                  - codebuild:UpdateReport
+                  - codebuild:BatchPutTestCases
+                  - codebuild:BatchPutCodeCoverages
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
+
+  BlogIAMECSWordpressTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${SystemName}ECSWordpressTaskRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: AllowS3Access-Media
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Resource:
+                  - !Sub ${S3MediaArn}
+                  - !Sub ${S3MediaArn}/*
+                Action:
+                  - s3:*
+        - PolicyName: CloudFront-Invalidation
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudfront:GetDistribution
+                  - cloudfront:GetDistributionConfig
+                  - cloudfront:ListDistributions
+                  - cloudfront:ListStreamingDistributions
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:ListInvalidations
+                  - cloudfront:GetInvalidation
+                Resource: '*'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSForWordPressPluginPolicy
+
+  BlogIAMCodePipelineServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${SystemName}CodePipelineServiceRole
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CustomPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - iam:PassRole
+                  - codecommit:CancelUploadArchive
+                  - codecommit:GetBranch
+                  - codecommit:GetCommit
+                  - codecommit:GetRepository
+                  - codecommit:GetUploadArchiveStatus
+                  - codecommit:UploadArchive
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                  - s3:*
+                  - ecr:DescribeImages
+                  - ecs:DescribeServices
+                  - ecs:DescribeTaskDefinition
+                  - ecs:DescribeTasks
+                  - ecs:ListTasks
+                  - ecs:RegisterTaskDefinition
+                  - ecs:UpdateService
+
+Outputs:
+  ECSTaskExecutionRole:
+    Value: !Ref BlogIAMECSTaskExecutionRole
+  ECSWordpressTaskRole:
+    Value: !Ref BlogIAMECSWordpressTaskRole
+  ECSWordpressTaskRoleArn:
+    Value: !GetAtt BlogIAMECSWordpressTaskRole.Arn
+  CodeBuildServiceRole:
+    Value: !Ref BlogIAMCodeBuildServiceRole
+  CodePipelineServiceRole:
+    Value: !Ref BlogIAMCodePipelineServiceRole
+  CodePipelineServiceRoleArn:
+    Value: !GetAtt BlogIAMCodePipelineServiceRole.Arn

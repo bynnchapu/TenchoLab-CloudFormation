@@ -1,0 +1,137 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  ElbHostOriginFqdn:
+    Type: String
+    Default: blog.origin.aws.tencho-lab.net
+  ElbHostProdFqdn:
+    Type: String
+    Default: blog.tencho-lab.net
+  SystemName:
+    Type: String
+    Default: Blog
+Resources:
+  ACMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-ACM.yaml
+      Parameters:
+        ElbHostOriginFqdn: !Ref ElbHostOriginFqdn
+        ElbHostProdFqdn: !Ref ElbHostProdFqdn
+        SystemName: !Ref SystemName
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-S3.yaml
+  SGStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-SG.yaml
+  ELBStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-ELB.yaml
+      Parameters:
+        ElbHostOriginFqdn: !Ref ElbHostOriginFqdn
+        #ElbHostProdFqdn: !Ref ElbHostProdFqdn
+        SystemName: !Ref SystemName
+        ACMELB: !GetAtt ACMStack.Outputs.CertificateArn
+        S3Name: !GetAtt S3Stack.Outputs.S3Name
+        SGELB: !GetAtt SGStack.Outputs.SGELB
+  EFSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-EFS.yaml
+      Parameters:
+        SGEFS: !GetAtt SGStack.Outputs.SGEFS
+        SystemName: !Ref SystemName
+  IAMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-IAM.yaml
+      Parameters:
+        SystemName: !Ref SystemName
+        S3Arn: !GetAtt S3Stack.Outputs.S3Arn
+        S3MediaArn: !GetAtt S3Stack.Outputs.S3MediaArn
+  LogsStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-Logs.yaml
+      Parameters:
+        SystemName: !Ref SystemName
+  #ServiceDiscoveryStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  Properties:
+  #    TemplateURL: ./TenchoLab-System-Blog-ServiceDiscovery.yaml
+  #    Parameters:
+  #      SystemName: !Ref SystemName
+  ECRStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-ECR.yaml
+  CodeCommitStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-CodeCommit.yaml
+      Parameters:
+        SystemName: !Ref SystemName
+  CodeBuildStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-CodeBuild.yaml
+      Parameters:
+        SystemName: !Ref SystemName
+        CodeBuildServiceRole: !GetAtt IAMStack.Outputs.CodeBuildServiceRole
+        #ECRMySQL: !GetAtt ECRStack.Outputs.ECRMySQLName
+        ECRWordpress: !GetAtt ECRStack.Outputs.ECRWordpressName
+  CodePipelineStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-CodePipeline.yaml
+      Parameters:
+        SystemName: !Ref SystemName
+        CodePipelineServiceRoleArn: !GetAtt IAMStack.Outputs.CodePipelineServiceRoleArn
+        S3Name: !GetAtt S3Stack.Outputs.S3Name
+        CodeCommitRepositoryName: !GetAtt CodeCommitStack.Outputs.CodeCommitRepositoryName
+        CodeBuildContainerImage: !GetAtt CodeBuildStack.Outputs.CodeBuildContainerImage
+  ECSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-ECS.yaml
+      Parameters:
+        SystemName: !Ref SystemName
+        SGECS: !GetAtt SGStack.Outputs.SGECS
+        #ServiceDiscoveryMySQLArn: !GetAtt ServiceDiscoveryStack.Outputs.MySQLArn
+        #ServiceDiscoveryWordpressArn: !GetAtt ServiceDiscoveryStack.Outputs.WordpressArn
+        ELBTargetGroupArn: !GetAtt ELBStack.Outputs.ELBTargetGroupArn
+        ECSTaskExecutionRole: !GetAtt IAMStack.Outputs.ECSTaskExecutionRole
+        ECSWordpressTaskRoleArn: !GetAtt IAMStack.Outputs.ECSWordpressTaskRoleArn
+        #ECRMySQLRepositoryUri: !GetAtt ECRStack.Outputs.ECRMySQLUri
+        ECRWordpressRepositoryUri: !GetAtt ECRStack.Outputs.ECRWordpressUri
+        #LogsMySQL: !GetAtt LogsStack.Outputs.LogsMySQL
+        LogsWordpress: !GetAtt LogsStack.Outputs.LogsWordpress
+        #EFSVolumeMySQL: !GetAtt EFSStack.Outputs.EFSMySQL
+        EFSVolumeWordpress: !GetAtt EFSStack.Outputs.EFSWordpress
+  Route53Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-Route53.yaml
+      Parameters:
+        ELBHostOriginFqdn: !Ref ElbHostOriginFqdn
+        ELBHostProdFqdn: !Ref ElbHostProdFqdn
+        ELBDnsName: !GetAtt ELBStack.Outputs.ELBDNSName
+        ELBCanonicalHostedZoneID: !GetAtt ELBStack.Outputs.ELBCanonicalHostedZoneID
+        CloudFrontDnsName: !GetAtt CloudFrontStack.Outputs.CloudFrontDnsName
+  CloudFrontStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Blog-CloudFront.yaml
+      Parameters:
+        HostOriginFqdn: !Ref ElbHostOriginFqdn
+        HostProdFqdn: !Ref ElbHostProdFqdn
+        PreSharedKey: !GetAtt ELBStack.Outputs.PreSharedKey
+        SystemName: !Ref SystemName
+        S3DomainName: !GetAtt S3Stack.Outputs.S3DomainName
+        S3MediaDomainName: !GetAtt S3Stack.Outputs.S3MediaDomainName
+        S3MediaName: !GetAtt S3Stack.Outputs.S3MediaName
+        S3MediaArn: !GetAtt S3Stack.Outputs.S3MediaArn

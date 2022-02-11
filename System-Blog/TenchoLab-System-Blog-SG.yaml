@@ -1,0 +1,60 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  BlogSGECS:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SG-Blog-ECS
+      GroupDescription: SG-Blog-ECS
+      VpcId: !ImportValue VPC-Id
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref BlogSGELB
+  #BlogSGECSIngress:
+  #  Type: AWS::EC2::SecurityGroupIngress
+  #  Properties:
+  #    GroupId: !Ref BlogSGECS
+  #    IpProtocol: tcp
+  #    FromPort: 3306
+  #    ToPort: 3306
+  #    SourceSecurityGroupId: !Ref BlogSGECS
+
+  BlogSGELB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SG-Blog-ELB
+      GroupDescription: SG-Blog-ELB
+      VpcId: !ImportValue VPC-Id
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+
+  BlogSGEFS:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SG-Blog-EFS
+      GroupDescription: SG-Blog-EFS
+      VpcId: !ImportValue VPC-Id
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 2049
+          ToPort: 2049
+          SourceSecurityGroupId: !Ref BlogSGECS
+
+Outputs:
+  SGECS:
+    Value: !Ref BlogSGECS
+    Export:
+      Name: Blog-SGECS
+  SGELB:
+    Value: !Ref BlogSGELB
+  SGEFS:
+    Value: !Ref BlogSGEFS

@@ -1,0 +1,42 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  ELBHostOriginFqdn:
+    Type: String
+  ELBHostProdFqdn:
+    Type: String
+  ELBDnsName:
+    Type: String
+  ELBCanonicalHostedZoneID:
+    Type: String
+  CloudFrontDnsName:
+    Type: String
+Resources:
+  BlogRoute53OriginHost:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: A
+      Name: !Ref ELBHostOriginFqdn
+      HostedZoneId: !ImportValue Route53-AwsTenchoLabNetHostZoneId
+      AliasTarget:
+        DNSName: !Ref ELBDnsName
+        HostedZoneId: !Ref ELBCanonicalHostedZoneID
+
+  BlogRoute53ProdHost:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: A
+      Name: !Ref ELBHostProdFqdn
+      HostedZoneId: !ImportValue Route53-TenchoLabNetHostZoneId
+      AliasTarget:
+        DNSName: !Ref CloudFrontDnsName
+        HostedZoneId: Z2FDTNDATAQYW2
+  BlogRoute53ProdHostAAAA:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: AAAA
+      Name: !Ref ELBHostProdFqdn
+      HostedZoneId: !ImportValue Route53-TenchoLabNetHostZoneId
+      AliasTarget:
+        DNSName: !Ref CloudFrontDnsName
+        HostedZoneId: Z2FDTNDATAQYW2

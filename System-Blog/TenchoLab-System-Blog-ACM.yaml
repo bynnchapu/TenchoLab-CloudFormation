@@ -1,0 +1,29 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  ElbHostOriginFqdn:
+    Type: String
+  ElbHostProdFqdn:
+    Type: String
+  SystemName:
+    Type: String
+Resources:
+  BlogACMELB:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref ElbHostOriginFqdn
+      SubjectAlternativeNames:
+        - !Ref ElbHostProdFqdn
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref ElbHostOriginFqdn
+          HostedZoneId: !ImportValue Route53-AwsTenchoLabNetHostZoneId
+        - DomainName: !Ref ElbHostProdFqdn
+          HostedZoneId: !ImportValue Route53-TenchoLabNetHostZoneId
+      Tags:
+        - Key: Name
+          Value: !Ref SystemName
+
+Outputs:
+  CertificateArn:
+    Value: !Ref BlogACMELB

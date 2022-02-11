@@ -1,0 +1,82 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  LogBucketName:
+    Type: String
+Resources:
+  SecurityS3:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref LogBucketName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: True
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True 
+        RestrictPublicBuckets: True
+  SecurityS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SecurityS3
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          # Config
+          - Sid: AWSConfigBucketPermissionsCheck
+            Effect: Allow
+            Principal:
+              Service:
+                - config.amazonaws.com
+            Action: s3:GetBucketAcl
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::${SecurityS3}"
+          - Sid: AWSSecurityS3Delivery
+            Effect: Allow
+            Principal:
+              Service:
+                - config.amazonaws.com
+            Action: s3:PutObject
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::${SecurityS3}/AWSLogs/${AWS::AccountId}/*"
+          - Sid: AWSSecurityS3SecureTransport
+            Action:
+              - s3:*
+            Effect: Deny
+            Resource:
+              - !Sub "arn:${AWS::Partition}:s3:::${SecurityS3}"
+              - !Sub "arn:${AWS::Partition}:s3:::${SecurityS3}/*"
+            Principal: "*"
+            Condition:
+              Bool:
+                aws:SecureTransport:
+                  false
+          # CloudTrail
+          - Sid: AWSCloudTrailAclCheck
+            Effect: Allow
+            Principal:
+              Service: 'cloudtrail.amazonaws.com'
+            Action: 's3:GetBucketAcl'
+            Resource: !Sub 'arn:aws:s3:::${SecurityS3}'
+          - Sid: AWSCloudTrailWrite
+            Effect: Allow
+            Principal:
+              Service: 'cloudtrail.amazonaws.com'
+            Action: 's3:PutObject'
+            Resource: !Sub 'arn:aws:s3:::${SecurityS3}/AWSLogs/${AWS::AccountId}/*'
+            Condition:
+              StringEquals:
+                's3:x-amz-acl': 'bucket-owner-full-control'
+          - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+            - !GetAtt 'SecurityS3.Arn'
+            - !Sub '${SecurityS3.Arn}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': false

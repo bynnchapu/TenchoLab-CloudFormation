@@ -1,0 +1,175 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  SystemName:
+    Type: String
+  SGECS:
+    Type: String
+  #ServiceDiscoveryMySQLArn:
+  #  Type: String
+  #ServiceDiscoveryWordpressArn:
+  #  Type: String
+  ELBTargetGroupArn:
+    Type: String
+  ECSTaskExecutionRole:
+    Type: String
+  ECSWordpressTaskRoleArn:
+    Type: String
+  #ECRMySQLRepositoryUri:
+  #  Type: String
+  ECRWordpressRepositoryUri:
+    Type: String
+  #LogsMySQL:
+  #  Type: String
+  LogsWordpress:
+    Type: String
+  #EFSVolumeMySQL:
+  #  Type: String
+  EFSVolumeWordpress:
+    Type: String
+Resources:
+  BlogECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Ref SystemName
+      ClusterSettings:
+        - Name: containerInsights
+          Value: disabled
+      CapacityProviders:
+        - FARGATE
+        - FARGATE_SPOT
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: FARGATE
+          Weight: 1
+        - CapacityProvider: FARGATE_SPOT
+          Weight: 0
+
+  #BlogECSMySQLService:
+  #  Type: AWS::ECS::Service
+  #  Properties:
+  #    ServiceName: MySQL
+  #    Cluster: !Ref BlogECSCluster
+  #    DesiredCount: 0
+  #    TaskDefinition: !Ref BlogECSMySQLTaskDefinition
+  #    LaunchType: FARGATE
+  #    NetworkConfiguration:
+  #      AwsvpcConfiguration:
+  #        AssignPublicIp: ENABLED
+  #        SecurityGroups:
+  #          - !Ref SGECS
+  #        Subnets:
+  #          - !ImportValue VPC-PublicSubnetIdDHCPA
+  #          - !ImportValue VPC-PublicSubnetIdDHCPC
+  #          - !ImportValue VPC-PublicSubnetIdDHCPD
+  #    ServiceRegistries:
+  #      - ContainerName: MySQL
+  #        RegistryArn: !Ref ServiceDiscoveryMySQLArn
+
+  BlogECSWordpressService:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: Wordpress
+      Cluster: !Ref BlogECSCluster
+      DesiredCount: 1
+      TaskDefinition: !Ref BlogECSWordpressTaskDefinition
+      CapacityProviderStrategy:
+        - CapacityProvider: FARGATE_SPOT
+          Base: 1
+          Weight: 1
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref SGECS
+          Subnets:
+            - !ImportValue VPC-PublicSubnetIdDHCPA
+            - !ImportValue VPC-PublicSubnetIdDHCPC
+            - !ImportValue VPC-PublicSubnetIdDHCPD
+      #ServiceRegistries:
+      #  - ContainerName: Wordpress
+      #    RegistryArn: !Ref ServiceDiscoveryWordpressArn
+      LoadBalancers:
+        - ContainerName: Wordpress
+          ContainerPort: 80
+          TargetGroupArn: !Ref ELBTargetGroupArn
+
+  #BlogECSMySQLTaskDefinition:
+  #  Type: AWS::ECS::TaskDefinition
+  #  Properties:
+  #    Family: !Sub ${SystemName}-MySQL
+  #    Cpu: 256
+  #    Memory: 512
+  #    NetworkMode: awsvpc
+  #    RequiresCompatibilities:
+  #      - "FARGATE"
+  #    ExecutionRoleArn: !Ref ECSTaskExecutionRole
+  #    ContainerDefinitions:
+  #      - Name: MySQL
+  #        Image: !Ref ECRMySQLRepositoryUri
+  #        PortMappings:
+  #          - ContainerPort: 3306
+  #            Protocol: tcp
+  #        Secrets:
+  #          - Name: MYSQL_DATABASE
+  #            ValueFrom: /System/Blog/MySQL/MYSQL_DATABASE
+  #          - Name: MYSQL_ROOT_PASSWORD
+  #            ValueFrom: /System/Blog/MySQL/MYSQL_ROOT_PASSWORD
+  #          - Name: MYSQL_USER
+  #            ValueFrom: /System/Blog/MySQL/MYSQL_USER
+  #          - Name: MYSQL_PASSWORD
+  #            ValueFrom: /System/Blog/MySQL/MYSQL_PASSWORD
+  #        MountPoints:
+  #          - SourceVolume: MySQL-Volume
+  #            ContainerPath: "/var/lib/mysql"
+  #        LogConfiguration:
+  #          LogDriver: awslogs
+  #          Options:
+  #            awslogs-group: !Ref LogsMySQL
+  #            awslogs-region: !Ref AWS::Region
+  #            awslogs-stream-prefix: ecs
+  #    Volumes:
+  #      - Name: MySQL-Volume
+  #        EFSVolumeConfiguration:
+  #          FilesystemId: !Ref EFSVolumeMySQL
+  #          TransitEncryption: ENABLED
+  
+  BlogECSWordpressTaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub ${SystemName}-Wordpress
+      Cpu: 256
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - "FARGATE"
+      ExecutionRoleArn: !Ref ECSTaskExecutionRole
+      TaskRoleArn: !Ref ECSWordpressTaskRoleArn
+      ContainerDefinitions:
+        - Name: Wordpress
+          Image: !Ref ECRWordpressRepositoryUri
+          PortMappings:
+            - ContainerPort: 80
+              Protocol: tcp
+          Secrets:
+            - Name: WORDPRESS_DB_HOST
+              ValueFrom: /System/Blog/MySQL/HOST
+            - Name: WORDPRESS_DB_NAME
+              ValueFrom: /System/Blog/MySQL/MYSQL_DATABASE
+            - Name: WORDPRESS_DB_USER
+              ValueFrom: /System/Blog/MySQL/MYSQL_USER
+            - Name: WORDPRESS_DB_PASSWORD
+              ValueFrom: /System/Blog/MySQL/MYSQL_PASSWORD
+          MountPoints:
+            - SourceVolume: Wordpress-Volume
+              ContainerPath: "/var/www/html"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogsWordpress
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: ecs
+      Volumes:
+        - Name: Wordpress-Volume
+          EFSVolumeConfiguration:
+            FilesystemId: !Ref EFSVolumeWordpress
+            TransitEncryption: ENABLED

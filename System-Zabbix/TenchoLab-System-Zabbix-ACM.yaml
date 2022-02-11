@@ -1,0 +1,24 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  SystemName:
+    Type: String
+  FQDN:
+    Type: String
+Resources:
+  ZabbixACM:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref FQDN
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Ref FQDN
+          HostedZoneId: !ImportValue Route53-AwsTenchoLabNetHostZoneId
+      Tags:
+        - Key: Name
+          Value: !Ref SystemName
+Outputs:
+  CertificateArn:
+    Value: !Ref ZabbixACM
+    Export:
+      Name: System-Zabbix-ACMArn

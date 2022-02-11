@@ -1,0 +1,333 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: "TenchoLab"
+  VpcCidr:
+    Type: String
+    Default: "10.102.0.0/16"
+  PublicSubnetFixCidrA:
+    Type: String
+    Default: "10.102.1.0/25"
+  PublicSubnetDHCPCidrA:
+    Type: String
+    Default: "10.102.1.128/25"
+  PublicSubnetFixCidrC:
+    Type: String
+    Default: "10.102.3.0/25"
+  PublicSubnetDHCPCidrC:
+    Type: String
+    Default: "10.102.3.128/25"
+  PublicSubnetFixCidrD:
+    Type: String
+    Default: "10.102.4.0/25"
+  PublicSubnetDHCPCidrD:
+    Type: String
+    Default: "10.102.4.128/25"
+  PrivateSubnetFixCidrA:
+    Type: String
+    Default: "10.102.21.0/25"
+  PrivateSubnetDHCPCidrA:
+    Type: String
+    Default: "10.102.21.128/25"
+  PrivateSubnetFixCidrC:
+    Type: String
+    Default: "10.102.23.0/25"
+  PrivateSubnetDHCPCidrC:
+    Type: String
+    Default: "10.102.23.128/25"
+  PrivateSubnetFixCidrD:
+    Type: String
+    Default: "10.102.24.0/25"
+  PrivateSubnetDHCPCidrD:
+    Type: String
+    Default: "10.102.24.128/25"
+Resources:
+  # VPC
+  TenchoLabVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCidr
+      EnableDnsSupport: True
+      EnableDnsHostnames: True
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-${AWS::Region}
+  # InternetGateway
+  InternetGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-${AWS::Region}
+  InternetGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      InternetGatewayId: !Ref InternetGW
+  
+  # Public Subnet
+  PublicSubnetFixA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnetFixCidrA
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Public-Fix-A
+  PublicSubnetDHCPA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnetDHCPCidrA
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Public-DHCP-A
+  PublicSubnetFixC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnetFixCidrC
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Public-Fix-C
+  PublicSubnetDHCPC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnetDHCPCidrC
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Public-DHCP-C
+  PublicSubnetFixD:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      AvailabilityZone: !Select [ 2, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnetFixCidrD
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Public-Fix-D
+  PublicSubnetDHCPD:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      AvailabilityZone: !Select [ 2, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnetDHCPCidrD
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Public-DHCP-D
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Public
+  PublicDefaultRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGWAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref InternetGW
+  PublicDefaultRouteV6:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGWAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationIpv6CidrBlock: "::/0"
+      GatewayId: !Ref InternetGW
+  PublicSubnetFixARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetFixA
+  PublicSubnetDHCPARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetDHCPA
+  PublicSubnetFixCRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetFixC
+  PublicSubnetDHCPCRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetDHCPC
+  PublicSubnetFixDRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetFixD
+  PublicSubnetDHCPDRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnetDHCPD
+
+  # Private Subnet
+  PrivateSubnetFixA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !Ref PrivateSubnetFixCidrA
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Private-Fix-A
+  PrivateSubnetDHCPA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      CidrBlock: !Ref PrivateSubnetDHCPCidrA
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Private-DHCP-A
+  PrivateSubnetFixC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !Ref PrivateSubnetFixCidrC
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Private-Fix-C
+  PrivateSubnetDHCPC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !Ref PrivateSubnetDHCPCidrC
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Private-DHCP-C
+  PrivateSubnetFixD:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      AvailabilityZone: !Select [ 2, !GetAZs '' ]
+      CidrBlock: !Ref PrivateSubnetFixCidrD
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Private-Fix-D
+  PrivateSubnetDHCPD:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      AvailabilityZone: !Select [ 2, !GetAZs '' ]
+      CidrBlock: !Ref PrivateSubnetDHCPCidrD
+      MapPublicIpOnLaunch: False
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Private-DHCP-D
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-Private
+  PrivateSubnetFixARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnetFixA
+  PrivateSubnetDHCPARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnetDHCPA
+  PrivateSubnetFixCRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnetFixC
+  PrivateSubnetDHCPCRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnetDHCPC
+  PrivateSubnetFixDRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnetFixD
+  PrivateSubnetDHCPDRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      SubnetId: !Ref PrivateSubnetDHCPD
+Outputs:
+  VPCId:
+    Value: !Ref TenchoLabVPC
+    Export:
+      Name: VPC-Id
+  PublicSubnetIdFixA:
+    Value: !Ref PublicSubnetFixA
+    Export:
+      Name: VPC-PublicSubnetIdFixA
+  PublicSubnetIdDHCPA:
+    Value: !Ref PublicSubnetDHCPA
+    Export:
+      Name: VPC-PublicSubnetIdDHCPA
+  PublicSubnetIdFixC:
+    Value: !Ref PublicSubnetFixC
+    Export:
+      Name: VPC-PublicSubnetIdFixC
+  PublicSubnetIdDHCPC:
+    Value: !Ref PublicSubnetDHCPC
+    Export:
+      Name: VPC-PublicSubnetIdDHCPC
+  PublicSubnetIdFixD:
+    Value: !Ref PublicSubnetFixD
+    Export:
+      Name: VPC-PublicSubnetIdFixD
+  PublicSubnetIdDHCPD:
+    Value: !Ref PublicSubnetDHCPD
+    Export:
+      Name: VPC-PublicSubnetIdDHCPD
+  PrivateSubnetIdFixA:
+    Value: !Ref PrivateSubnetFixA
+    Export:
+      Name: VPC-PrivateSubnetIdFixA
+  PrivateSubnetIdDHCPA:
+    Value: !Ref PrivateSubnetDHCPA
+    Export:
+      Name: VPC-PrivateSubnetIdDHCPA
+  PrivateSubnetIdFixC:
+    Value: !Ref PrivateSubnetFixC
+    Export:
+      Name: VPC-PrivateSubnetIdFixC
+  PrivateSubnetIdDHCPC:
+    Value: !Ref PrivateSubnetDHCPC
+    Export:
+      Name: VPC-PrivateSubnetIdDHCPC
+  PrivateSubnetIdFixD:
+    Value: !Ref PrivateSubnetFixD
+    Export:
+      Name: VPC-PrivateSubnetIdFixD
+  PrivateSubnetIdDHCPD:
+    Value: !Ref PrivateSubnetDHCPD
+    Export:
+      Name: VPC-PrivateSubnetIdDHCPD

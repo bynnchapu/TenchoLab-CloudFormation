@@ -1,0 +1,39 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  SystemName:
+    Type: String
+  CodeBuildServiceRole:
+    Type: String
+  #ECRMySQL:
+  #  Type: String
+  ECRWordpress:
+    Type: String
+Resources:
+  BlogCodeBuildContainerImage:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub ${SystemName}-ContainerImage
+      ServiceRole: !Ref CodeBuildServiceRole
+      Source:
+        Type: CODEPIPELINE
+        BuildSpec: buildspec.yaml
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        PrivilegedMode: True
+        EnvironmentVariables:
+          - Name: AWS_ACCOUNT_ID
+            Value: !Ref AWS::AccountId
+          - Name: IMAGE_TAG
+            Value: latest
+          #- Name: IMAGE_REPO_NAME_MYSQL
+          #  Value: !Ref ECRMySQL
+          - Name: IMAGE_REPO_NAME_WORDPRESS
+            Value: !Ref ECRWordpress
+Outputs:
+  CodeBuildContainerImage:
+    Value: !Ref BlogCodeBuildContainerImage

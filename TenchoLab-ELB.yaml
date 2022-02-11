@@ -1,0 +1,71 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  TenchoLabSGELB:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SG-ELB
+      GroupDescription: SG-ELB
+      VpcId: !ImportValue VPC-Id
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+  TenchoLabACMELB:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: elb.aws.tencho-lab.net
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: elb.aws.tencho-lab.net
+          HostedZoneId: !ImportValue Route53-AwsTenchoLabNetHostZoneId
+      Tags:
+        - Key: Name
+          Value: ELB-Default
+  
+#  TenchoLabELB:
+#    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+#    Properties:
+#      Name: tencholab-lb
+#      Type: application
+#      Scheme: internet-facing
+#      SecurityGroups:
+#        - !Ref TenchoLabSGELB
+#      Subnets:
+#        - !ImportValue VPC-PublicSubnetIdDHCPA
+#        - !ImportValue VPC-PublicSubnetIdDHCPC
+#        - !ImportValue VPC-PublicSubnetIdDHCPD
+#  
+#  TenchoLabELBHTTPListner:
+#    Type: AWS::ElasticLoadBalancingV2::Listener
+#    Properties:
+#      LoadBalancerArn: !Ref TenchoLabELB
+#      Protocol: HTTP
+#      Port: 80
+#      DefaultActions:
+#        - Type: "redirect"
+#          RedirectConfig:
+#            Protocol: "HTTPS"
+#            Port: 443
+#            Host: "#{host}"
+#            Path: "/#{path}"
+#            Query: "#{query}"
+#            StatusCode: "HTTP_301"
+#
+#  TenchoLabELBHTTPSListner:
+#    Type: AWS::ElasticLoadBalancingV2::Listener
+#    Properties:
+#      LoadBalancerArn: !Ref TenchoLabELB
+#      Protocol: HTTPS
+#      Port: 443
+#      Certificates:
+#        - CertificateArn: !Ref TenchoLabACMELB
+#      DefaultActions:
+#        - Type: "fixed-response"
+#          FixedResponseConfig:
+#            StatusCode: 503

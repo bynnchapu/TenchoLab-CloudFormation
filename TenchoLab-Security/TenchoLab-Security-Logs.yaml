@@ -1,0 +1,13 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  SecurityLogsCloudTrail:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /Security/CloudTrail
+      RetentionInDays: 7
+Outputs:
+  SecurityLogsCloudTrailName:
+    Value: !Ref SecurityLogsCloudTrail
+  SecurityLogsCloudTrailArn:
+    Value: !GetAtt SecurityLogsCloudTrail.Arn

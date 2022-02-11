@@ -1,0 +1,111 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  DBName:
+    Type: String
+    Default: tencholab-db
+  DBMasterName:
+    Type: String
+  DBMasterPassword:
+    Type: String
+    NoEcho: True
+Resources:
+  RDSDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: TenchoLabRDS
+      DBSubnetGroupDescription: TenchoLabRDS
+      SubnetIds:
+        - !ImportValue VPC-PrivateSubnetIdDHCPA
+        - !ImportValue VPC-PrivateSubnetIdDHCPC
+        - !ImportValue VPC-PrivateSubnetIdDHCPD
+  
+  RDSDBInstance:
+    Type: AWS::RDS::DBInstance
+    DependsOn:
+      - RDSLogsAudit
+      - RDSLogsError
+      - RDSLogsGeneral
+      - RDSLogsSlowQuery
+    Properties:
+      DBInstanceIdentifier: !Ref DBName
+      DBInstanceClass: db.t3.micro
+      Engine: mysql
+      EngineVersion: 8.0.27
+      DBParameterGroupName: !Ref RDSParameterGroup
+      OptionGroupName: !Ref RDSOptionGroup
+      DBSubnetGroupName: !Ref RDSDBSubnetGroup
+      VPCSecurityGroups:
+        - !Ref RDSSG
+      StorageEncrypted: True 
+      EnableCloudwatchLogsExports:
+        - audit
+        - general
+        - error
+        - slowquery
+      MasterUsername: !Ref DBMasterName
+      MasterUserPassword: !Ref DBMasterPassword
+      StorageType: gp2
+      AllocatedStorage: 20
+      PreferredMaintenanceWindow: Tue:15:00-Tue:15:30
+      AutoMinorVersionUpgrade: True
+      PreferredBackupWindow: 16:00-16:30
+      BackupRetentionPeriod: 7
+      DeleteAutomatedBackups: True
+  RDSParameterGroup:
+    Type: AWS::RDS::DBParameterGroup
+    Properties:
+      Description: TenchoLabDB-MySQL8.0
+      Family: mysql8.0
+      Tags:
+        - Key: Name
+          Value: tencholab-db.mysql80
+      Parameters:
+        character_set_client: utf8mb4
+        character_set_server: utf8mb4
+        character_set_connection: utf8mb4
+        character_set_database: utf8mb4
+        character_set_filesystem: utf8mb4
+        character_set_results: utf8mb4
+        performance_schema: 1
+  RDSOptionGroup:
+    Type: AWS::RDS::OptionGroup
+    Properties:
+      OptionGroupDescription: TenchoLabDB-MySQL8.0
+      EngineName: mysql
+      MajorEngineVersion: 8.0
+      OptionConfigurations:
+        - OptionName: MARIADB_AUDIT_PLUGIN
+
+  RDSSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SG-RDS
+      GroupDescription: SG-RDS
+      VpcId: !ImportValue VPC-Id
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !ImportValue Blog-SGECS
+
+  RDSLogsAudit:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/rds/instance/${DBName}/audit
+      RetentionInDays: 7
+  RDSLogsError:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/rds/instance/${DBName}/error
+      RetentionInDays: 60
+  RDSLogsGeneral:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/rds/instance/${DBName}/general
+      RetentionInDays: 60
+  RDSLogsSlowQuery:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/rds/instance/${DBName}/slowquery
+      RetentionInDays: 60

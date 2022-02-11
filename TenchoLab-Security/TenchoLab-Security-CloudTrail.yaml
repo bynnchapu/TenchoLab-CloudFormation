@@ -1,0 +1,24 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  LogBucketName:
+    Type: String
+  KMSKeyId:
+    Type: String
+  CloudWatchLogsArn:
+    Type: String
+  CloudWatchLogsRoleArn:
+    Type: String
+Resources:
+  SecurityCloudTrail:
+    Type: AWS::CloudTrail::Trail
+    Properties:
+      TrailName: CloudTrail
+      IsMultiRegionTrail: True
+      IncludeGlobalServiceEvents: True
+      IsLogging: True
+      S3BucketName: !Ref LogBucketName
+      KMSKeyId: !Ref KMSKeyId
+      EnableLogFileValidation: True
+      CloudWatchLogsLogGroupArn: !Ref CloudWatchLogsArn
+      CloudWatchLogsRoleArn: !Ref CloudWatchLogsRoleArn

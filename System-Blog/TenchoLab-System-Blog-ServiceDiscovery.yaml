@@ -1,0 +1,36 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  SystemName:
+    Type: String
+Resources:
+  BlogServiceDiscorveryPrivateDnsNamespace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Vpc: !ImportValue VPC-Id
+      Name: !Ref SystemName
+  BlogServiceDiscoveryServiceMySQL:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: mysql
+      DnsConfig:
+        NamespaceId: !Ref BlogServiceDiscorveryPrivateDnsNamespace
+        DnsRecords:
+          - Type: A
+            TTL: 60
+        RoutingPolicy: MULTIVALUE
+  BlogServiceDiscoveryServiceWordpress:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: wordpress
+      DnsConfig:
+        NamespaceId: !Ref BlogServiceDiscorveryPrivateDnsNamespace
+        DnsRecords:
+          - Type: A
+            TTL: 60
+        RoutingPolicy: MULTIVALUE
+Outputs:
+  MySQLArn:
+    Value: !GetAtt BlogServiceDiscoveryServiceMySQL.Arn
+  WordpressArn:
+    Value: !GetAtt BlogServiceDiscoveryServiceWordpress.Arn

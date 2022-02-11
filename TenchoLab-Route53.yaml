@@ -1,0 +1,40 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  TenchoLabNetHostName:
+    Type: String
+    Default: tencho-lab.net
+  AwsTenchoLabNetHostName:
+    Type: String
+    Default: aws.tencho-lab.net
+  NorikiMeHostName:
+    Type: String
+    Default: noriki.me
+
+Resources:
+  TenchoLabNetHostZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: !Ref TenchoLabNetHostName
+  AwsTenchoLabNetHostZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: !Ref AwsTenchoLabNetHostName
+  NorikiMeHostZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: !Ref NorikiMeHostName
+
+Outputs:
+  TenchoLabNetHostZoneId:
+    Value: !Ref TenchoLabNetHostZone
+    Export:
+      Name: Route53-TenchoLabNetHostZoneId
+  AwsTenchoLabNetHostZoneId:
+    Value: !Ref AwsTenchoLabNetHostZone
+    Export:
+      Name: Route53-AwsTenchoLabNetHostZoneId
+  NorikiMeHostZoneId:
+    Value: !Ref NorikiMeHostZone
+    Export:
+      Name: Route53-NorikiMeHostZoneId

@@ -1,0 +1,59 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  LogsName:
+    Type: String  
+Resources:
+  SecurityIAMConfigRecorderRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SecurityConfigServiceRecorderRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - config.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AWS_ConfigRole"
+  SecurityIAMCloudTrailToLogs:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: SecurityCloudTrailToLogsRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - cloudtrail.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: "AWSCloudTrailCreateLogStream"   
+                Effect: Allow
+                Action:
+                  - "logs:CreateLogStream"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogsName}:log-stream:${AWS::AccountId}_CloudTrail_${AWS::Region}*"
+              - Sid: "AWSCloudTrailPutLogEvents"   
+                Effect: Allow
+                Action:
+                  - "logs:PutLogEvents"
+                Resource:
+                  - !Sub "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogsName}:log-stream:${AWS::AccountId}_CloudTrail_${AWS::Region}*"
+          PolicyName: CreateLogStream
+
+Outputs:
+  SecurityIAMConfigRecorderRoleArn:
+    Value: !GetAtt SecurityIAMConfigRecorderRole.Arn
+  SecurityIAMCloudTrailToLogsArn:
+    Value: !GetAtt SecurityIAMCloudTrailToLogs.Arn

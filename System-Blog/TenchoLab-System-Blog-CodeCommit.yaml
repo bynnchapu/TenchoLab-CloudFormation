@@ -1,0 +1,13 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  SystemName:
+    Type: String
+Resources:
+  BlogCodeCommitRepositoryContainerImage:
+    Type: AWS::CodeCommit::Repository
+    Properties:
+      RepositoryName: !Sub ${SystemName}-ContainerImage
+Outputs:
+  CodeCommitRepositoryName:
+    Value: !GetAtt BlogCodeCommitRepositoryContainerImage.Name

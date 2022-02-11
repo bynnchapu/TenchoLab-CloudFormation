@@ -1,0 +1,17 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  SystemName:
+    Type: String
+    Default: Zabbix
+  FQDN:
+    Type: String
+    Default: zabbix.aws.tencho-lab.net
+Resources:
+  ACMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Zabbix-ACM.yaml
+      Parameters:
+        SystemName: !Ref SystemName
+        FQDN: !Ref FQDN

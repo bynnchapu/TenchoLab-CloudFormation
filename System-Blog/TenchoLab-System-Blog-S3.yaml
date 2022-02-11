@@ -1,0 +1,71 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  BlogS3:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub tencho-lab-blog-${AWS::Region}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: True
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True 
+        RestrictPublicBuckets: True
+  BlogS3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref BlogS3
+      PolicyDocument:
+        Id: "Allow-Put-ELB-logs"
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+            - !GetAtt 'BlogS3.Arn'
+            - !Sub '${BlogS3.Arn}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
+          - Sid: "Stmt1429136633762"
+            Action:
+              - "s3:PutObject"
+            Effect: "Allow"
+            Resource: !Sub ${BlogS3.Arn}/ELBLog/AWSLogs/${AWS::AccountId}/*
+            Principal:
+              AWS: "arn:aws:iam::582318560864:root"
+
+  BlogS3Media:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub tencho-lab-blog-media-${AWS::Region}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: True
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls:  True
+        RestrictPublicBuckets: True
+
+Outputs:
+  S3Name:
+    Value: !Ref BlogS3
+  S3Arn:
+    Value: !GetAtt BlogS3.Arn
+  S3DomainName:
+    Value: !GetAtt BlogS3.DomainName
+  S3MediaName:
+    Value: !Ref BlogS3Media
+  S3MediaArn:
+    Value: !GetAtt BlogS3Media.Arn
+  S3MediaDomainName:
+    Value: !GetAtt BlogS3Media.DomainName

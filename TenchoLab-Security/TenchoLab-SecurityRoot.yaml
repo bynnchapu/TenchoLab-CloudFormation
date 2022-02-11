@@ -1,0 +1,51 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Security Configuration
+Parameters:
+  LogBucketName:
+    Type: String
+    Default: tencho-lab-security-log
+Resources:
+  SecurityHub:
+    Type: AWS::SecurityHub::Hub
+
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-Security-S3.yaml
+      Parameters:
+        LogBucketName: !Ref LogBucketName
+  IAMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-Security-IAM.yaml
+      Parameters:
+        LogsName: !GetAtt LogsStack.Outputs.SecurityLogsCloudTrailName
+  ConfigStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-Security-Config.yaml
+      Parameters:
+        ConfigRecorderRoleArn: !GetAtt IAMStack.Outputs.SecurityIAMConfigRecorderRoleArn
+        LogBucketName: !Ref LogBucketName
+  CloudTrailStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-Security-CloudTrail.yaml
+      Parameters:
+        LogBucketName: !Ref LogBucketName
+        KMSKeyId: !GetAtt KMSStack.Outputs.KMSKeyId
+        CloudWatchLogsArn: !GetAtt LogsStack.Outputs.SecurityLogsCloudTrailArn
+        CloudWatchLogsRoleArn: !GetAtt IAMStack.Outputs.SecurityIAMCloudTrailToLogsArn
+  GuardDutyStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-Security-GuardDuty.yaml
+  KMSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-Security-KMS.yaml
+  LogsStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-Security-Logs.yaml

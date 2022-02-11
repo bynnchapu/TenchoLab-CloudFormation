@@ -1,0 +1,252 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  HostOriginFqdn:
+    Type: String
+  HostProdFqdn:
+    Type: String
+  PreSharedKey:
+    Type: String
+  SystemName:
+    Type: String
+  S3DomainName:
+    Type: String
+  S3MediaName:
+    Type: String
+  S3MediaArn:
+    Type: String
+  S3MediaDomainName:
+    Type: String
+Resources:
+  BlogCloudFront:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: !Sub ${SystemName}
+        Enabled: True
+        WebACLId: arn:aws:wafv2:us-east-1:499862365437:global/webacl/Blog/aee70e2b-de18-4834-a4fd-e49c68ba20ec
+        Origins:
+          - Id: ELB-Blog
+            DomainName: !Ref HostOriginFqdn
+            OriginCustomHeaders:
+              - HeaderName: X-Via-Location
+                HeaderValue: !Ref HostOriginFqdn
+              - HeaderName: X-Pre-Shared-Key
+                HeaderValue: !Ref PreSharedKey
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols:
+                - TLSv1.2
+              OriginReadTimeout: 60
+          - Id: S3-Media
+            DomainName: !Ref S3MediaDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${BlogCloudFrontOriginAccessIdentityMedia}
+        DefaultCacheBehavior:
+          TargetOriginId: ELB-Blog
+          Compress: True
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+            - OPTIONS
+            - PUT
+            - POST
+            - PATCH
+            - DELETE
+          CachePolicyId: !Ref BlogCloudFrontCachePolicyWordpress
+          OriginRequestPolicyId: !Ref BlogCloudFrontOriginRequestPolicyWordpress
+        CacheBehaviors:
+          - PathPattern: /wp-content/uploads/images/*
+            TargetOriginId: S3-Media
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachePolicyId: !Ref BlogCloudFrontCachePolicyWordpressMedia
+            OriginRequestPolicyId: !Ref BlogCloudFrontOriginRequestPolicyWordpressMedia
+          - PathPattern: /wp-admin/*
+            TargetOriginId: ELB-Blog
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - POST
+              - PATCH
+              - DELETE
+            CachePolicyId: !Ref BlogCloudFrontCachePolicyWordpressDisabled
+            OriginRequestPolicyId: !Ref BlogCloudFrontOriginRequestPolicyWordpressAdmin
+          - PathPattern: /wp-json/*
+            TargetOriginId: ELB-Blog
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - POST
+              - PATCH
+              - DELETE
+            CachePolicyId: !Ref BlogCloudFrontCachePolicyWordpressDisabled
+            OriginRequestPolicyId: !Ref BlogCloudFrontOriginRequestPolicyWordpressAdmin
+          - PathPattern: wp-login.php
+            TargetOriginId: ELB-Blog
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - POST
+              - PATCH
+              - DELETE
+            CachePolicyId: !Ref BlogCloudFrontCachePolicyWordpressDisabled
+            OriginRequestPolicyId: !Ref BlogCloudFrontOriginRequestPolicyWordpressAdmin
+        HttpVersion: http2
+        Aliases:
+          - !Ref HostProdFqdn
+        PriceClass: PriceClass_All
+        IPV6Enabled: True
+        ViewerCertificate:
+          AcmCertificateArn: arn:aws:acm:us-east-1:499862365437:certificate/b20f1a84-4906-4e7a-8702-d956da81bd61
+          MinimumProtocolVersion: TLSv1.2_2021
+          SslSupportMethod: sni-only
+        Logging:
+          Bucket: !Ref S3DomainName
+          Prefix: CloudFront
+
+  BlogCloudFrontOriginAccessIdentityMedia:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: !Sub ${SystemName}-Media
+  BlogS3BucketPolicyMedia:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3MediaName
+      PolicyDocument:
+        Statement:
+          - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+            - !Ref 'S3MediaArn'
+            - !Sub '${S3MediaArn}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
+          - Effect: Allow
+            Sid: "Origin Access Identity"
+            Action: s3:GetObject
+            Resource: !Sub ${S3MediaArn}/*
+            Principal:
+              AWS: !Sub arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${BlogCloudFrontOriginAccessIdentityMedia}
+
+  BlogCloudFrontOriginRequestPolicyWordpress:
+    Type: AWS::CloudFront::OriginRequestPolicy
+    Properties:
+      OriginRequestPolicyConfig:
+        Name: !Sub ${SystemName}-Wordpress
+        HeadersConfig:
+          HeaderBehavior: whitelist
+          Headers:
+            - CloudFront-Forwarded-Proto
+            - CloudFront-Is-Tablet-Viewer
+            - CloudFront-Is-Mobile-Viewer
+            - CloudFront-Is-Desktop-Viewer
+            - Host
+        QueryStringsConfig:
+          QueryStringBehavior: all
+        CookiesConfig:
+          CookieBehavior: whitelist
+          Cookies:
+            - comment_*
+            - wordpress_*
+            - wp-settings-*
+  BlogCloudFrontOriginRequestPolicyWordpressAdmin:
+    Type: AWS::CloudFront::OriginRequestPolicy
+    Properties:
+      OriginRequestPolicyConfig:
+        Name: !Sub ${SystemName}-Wordpress-Admin
+        HeadersConfig:
+          HeaderBehavior: allViewer
+        QueryStringsConfig:
+          QueryStringBehavior: all
+        CookiesConfig:
+          CookieBehavior: all
+  BlogCloudFrontOriginRequestPolicyWordpressMedia:
+    Type: AWS::CloudFront::OriginRequestPolicy
+    Properties:
+      OriginRequestPolicyConfig:
+        Name: !Sub ${SystemName}-Wordpress-Media
+        HeadersConfig:
+          HeaderBehavior: none
+        QueryStringsConfig:
+          QueryStringBehavior: none
+        CookiesConfig:
+          CookieBehavior: none
+
+  BlogCloudFrontCachePolicyWordpress:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub ${SystemName}-Wordpress
+        MinTTL: 1
+        MaxTTL: 31536000
+        DefaultTTL: 86400
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingGzip: True
+          EnableAcceptEncodingBrotli: True
+          CookiesConfig:
+            CookieBehavior: whitelist
+            Cookies:
+              - comment_*
+              - wordpress_*
+              - wp-settings-*
+          HeadersConfig:
+            HeaderBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: whitelist
+            QueryStrings:
+              - s
+  BlogCloudFrontCachePolicyWordpressMedia:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub ${SystemName}-Wordpress-Media
+        MinTTL: 1
+        MaxTTL: 31536000
+        DefaultTTL: 86400
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingGzip: True
+          EnableAcceptEncodingBrotli: True
+          CookiesConfig:
+            CookieBehavior: none
+          HeadersConfig:
+            HeaderBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+  BlogCloudFrontCachePolicyWordpressDisabled:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub ${SystemName}-Wordpress-Disabled
+        MinTTL: 0
+        MaxTTL: 0
+        DefaultTTL: 0
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingGzip: False
+          EnableAcceptEncodingBrotli: False
+          CookiesConfig:
+            CookieBehavior: none
+          HeadersConfig:
+            HeaderBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+
+Outputs:
+  CloudFrontDnsName:
+    Value: !GetAtt BlogCloudFront.DomainName

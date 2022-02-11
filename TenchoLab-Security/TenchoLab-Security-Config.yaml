@@ -1,0 +1,21 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  ConfigRecorderRoleArn:
+    Type: String
+  LogBucketName:
+    Type: String
+Resources:
+  SecurityConfigRecorder:
+    Type: AWS::Config::ConfigurationRecorder
+    Properties:
+      RecordingGroup:
+        AllSupported: True
+        IncludeGlobalResourceTypes: True
+      RoleARN: !Ref ConfigRecorderRoleArn
+  SecurityConfigDeliveryChannel:
+    Type: AWS::Config::DeliveryChannel
+    Properties:
+      ConfigSnapshotDeliveryProperties:
+        DeliveryFrequency: One_Hour
+      S3BucketName: !Ref LogBucketName

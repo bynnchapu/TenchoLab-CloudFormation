@@ -1,0 +1,12 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: GuardDuty Configuration.
+Resources:
+  SecurityGuardDuty:
+    Type: AWS::GuardDuty::Detector
+    Properties:
+      Enable: True
+      FindingPublishingFrequency: FIFTEEN_MINUTES
+      DataSources:
+        S3Logs:
+          Enable: True

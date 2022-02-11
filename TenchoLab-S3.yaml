@@ -1,0 +1,39 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  TenchoLabS3CfnPackage:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: tencho-lab-cfn-package
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: True
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True 
+        RestrictPublicBuckets: True
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteTemporaryTemplate
+            Status: Enabled
+            ExpirationInDays: 3
+  TenchoLabS3CfnPackageBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TenchoLabS3CfnPackage
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+            - !GetAtt 'TenchoLabS3CfnPackage.Arn'
+            - !Sub '${TenchoLabS3CfnPackage.Arn}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
