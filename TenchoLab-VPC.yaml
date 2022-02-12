@@ -414,6 +414,36 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnetDHCPD
+
+  #Nat Instance
+  NatInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      GroupName: SG-NAT
+      GroupDescription: SG-NAT
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourcePrefixListId: !Ref ProtectedPrefixList
+          Description: From Protected
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourcePrefixListId: !Ref ProtectedPrefixList
+          Description: From Protected
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+          Description: To Any
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+          Description: To Any
 Outputs:
   VPCId:
     Value: !Ref TenchoLabVPC
