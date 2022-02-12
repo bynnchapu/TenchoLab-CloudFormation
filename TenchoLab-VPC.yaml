@@ -285,6 +285,12 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-Protected
+  ProtectedDefaultRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref ProtectedRouteTable
+      DestinationCidrBlock: "0.0.0.0/0"
+      InstanceId: !Ref NatInstance
   ProtectedSubnetFixARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -449,6 +455,42 @@ Resources:
           ToPort: 443
           CidrIp: 0.0.0.0/0
           Description: To Any
+  NatInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: !Select [ 0, !GetAZs '' ]
+      IamInstanceProfile: !ImportValue IAM-Ec2ProfiletNatInstance
+      ImageId: ami-08a8688fb7eacb171
+      InstanceType: t3.micro
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          AssociatePublicIpAddress: True
+          GroupSet:
+            - !Ref NatInstanceSG
+          SubnetId: !Ref PublicSubnetFixA
+          PrivateIpAddress: 10.102.1.4
+      Tags:
+        - Key: Name
+          Value: NATInstance
+      UserData: 
+        Fn::Base64: |
+          #!/bin/sh
+          # Get Token for IMDSv2
+          TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+          # Get InstanceID
+          INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/instance-id)
+          # Get Region
+          AWS_REGION=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/placement/availability-zone | sed -e 's/.$//')
+          # Stop Source / destination check
+          aws ec2 modify-instance-attribute --instance-id $INSTANCE_ID --source-dest-check "{\"Value\": false}" --region ${AWS_REGION}
+          # Use only IMDSv2
+          aws ec2 modify-instance-metadata-options --instance-id $INSTANCE_ID --http-tokens required --http-endpoint enabled --region ${AWS_REGION}
+          # Set up NAT Instance
+          sudo sysctl -w net.ipv4.ip_forward=1
+          sudo /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+          sudo yum install -y iptables-services
+          sudo service iptables save
+
 Outputs:
   VPCId:
     Value: !Ref TenchoLabVPC
