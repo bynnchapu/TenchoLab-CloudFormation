@@ -24,7 +24,6 @@ Resources:
       DistributionConfig:
         Comment: !Sub ${SystemName}
         Enabled: True
-        WebACLId: arn:aws:wafv2:us-east-1:499862365437:global/webacl/Blog/aee70e2b-de18-4834-a4fd-e49c68ba20ec
         Origins:
           - Id: ELB-Blog
             DomainName: !Ref HostOriginFqdn
