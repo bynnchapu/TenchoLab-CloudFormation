@@ -1,7 +1,7 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
 Resources:
-  IAMEc2DefaultRole:
+  IAMRoleEc2Default:
     Type: AWS::IAM::Role
     Properties:
       RoleName: EC2-Default
@@ -18,9 +18,8 @@ Resources:
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
   
-  IAMEc2DefaultInstanceProfile:
+  IAMProfileEc2DefaultInstance:
     Type: AWS::IAM::InstanceProfile
     Properties:
       InstanceProfileName: EC2-Default
       Roles:
-        - !Ref IAMEc2DefaultRole
