@@ -42,6 +42,7 @@ Resources:
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
         - !Ref IAMPolicyEc2AllowModifyInstanceAttiribute
+        - !Ref IAMPolicyEc2AllowModifyInstanceMetadataOptions
   IAMPolicyEc2AllowModifyInstanceAttiribute:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -60,6 +61,18 @@ Resources:
       InstanceProfileName: EC2-Nat
       Roles:
         - !Ref IAMRoleEc2Nat
+  IAMPolicyEc2AllowModifyInstanceMetadataOptions:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: Custom-EC2AllowModifyInstanceMetadataOptions
+      Path: /
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowModifyInstanceAttribute
+            Effect: Allow
+            Action: ec2:ModifyInstanceMetadataOptions
+            Resource: "*"
 
 Outputs:
   IAMRoleEc2Default:
