@@ -23,3 +23,50 @@ Resources:
     Properties:
       InstanceProfileName: EC2-Default
       Roles:
+        - !Ref IAMRoleEc2Default
+
+  IAMRoleEc2Nat:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: EC2-NAT
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        - !Ref IAMPolicyEc2AllowModifyInstanceAttiribute
+  IAMPolicyEc2AllowModifyInstanceAttiribute:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: Custom-EC2AllowModifyInstanceAttribute
+      Path: /
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowModifyInstanceAttribute
+            Effect: Allow
+            Action: ec2:ModifyInstanceAttribute
+            Resource: "*"
+  IAMEc2ProfileNatInstance:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: EC2-Nat
+      Roles:
+        - !Ref IAMRoleEc2Nat
+
+Outputs:
+  IAMRoleEc2Default:
+    Value: !Ref IAMProfileEc2DefaultInstance
+    Export:
+      Name: IAM-Ec2ProfileDefaultInstance
+  IAMRoleEc2Nat:
+    Value: !Ref IAMEc2ProfileNatInstance
+    Export:
+      Name: IAM-Ec2ProfiletNatInstance
