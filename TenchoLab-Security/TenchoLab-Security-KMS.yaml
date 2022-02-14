@@ -72,6 +72,11 @@ Resources:
                 kms:CallerAccount: !Ref AWS::AccountId
               StringLike:
                 kms:EncryptionContext:aws:cloudtrail:arn: !Sub 'arn:aws:cloudtrail:*:${AWS::AccountId}:trail/*'
+  SecurityKMSAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: alias/TenchoLabSecurity
+      TargetKeyId: !Ref SecurityKMS
 Outputs:
   KMSKeyId:
     Value: !Ref SecurityKMS
