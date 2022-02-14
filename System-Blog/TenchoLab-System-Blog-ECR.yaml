@@ -13,6 +13,24 @@ Resources:
       RepositoryName: blog/wordpress
       ImageScanningConfiguration:
         ScanOnPush: True
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Delete unncessary images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 2
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
 Outputs: 
   ECRMySQLName:
     Value: !Ref BlogECRMySQL
