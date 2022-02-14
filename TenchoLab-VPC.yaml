@@ -520,6 +520,30 @@ Outputs:
     Value: !Ref PublicSubnetDHCPD
     Export:
       Name: VPC-PublicSubnetIdDHCPD
+  ProtectedSubnetIdFixA:
+    Value: !Ref ProtectedSubnetFixA
+    Export:
+      Name: VPC-ProtectedSubnetIdFixA
+  ProtectedSubnetIdDHCPA:
+    Value: !Ref ProtectedSubnetDHCPA
+    Export:
+      Name: VPC-ProtectedSubnetIdDHCPA
+  ProtectedSubnetIdFixC:
+    Value: !Ref ProtectedSubnetFixC
+    Export:
+      Name: VPC-ProtectedSubnetIdFixC
+  ProtectedSubnetIdDHCPC:
+    Value: !Ref ProtectedSubnetDHCPC
+    Export:
+      Name: VPC-ProtectedSubnetIdDHCPC
+  ProtectedSubnetIdFixD:
+    Value: !Ref ProtectedSubnetFixD
+    Export:
+      Name: VPC-ProtectedSubnetIdFixD
+  ProtectedSubnetIdDHCPD:
+    Value: !Ref ProtectedSubnetDHCPD
+    Export:
+      Name: VPC-ProtectedSubnetIdDHCPD
   PrivateSubnetIdFixA:
     Value: !Ref PrivateSubnetFixA
     Export:
