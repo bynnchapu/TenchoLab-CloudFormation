@@ -1,0 +1,94 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  PatchMGRBaselineNat:
+    Type: AWS::SSM::PatchBaseline
+    Properties:
+      Name: TenchoLab-NATBaseline
+      OperatingSystem: AMAZON_LINUX_2
+      PatchGroups:
+        - NAT
+      ApprovalRules:
+        PatchRules:
+          - ApproveAfterDays: 1
+            EnableNonSecurity: False
+            ComplianceLevel: CRITICAL
+            PatchFilterGroup:
+              PatchFilters:
+                - Key: PRODUCT
+                  Values: [AmazonLinux2]
+                - Key: CLASSIFICATION
+                  Values: [Security]
+                - Key: SEVERITY
+                  Values: [Important,Critical]
+          - ApproveAfterDays: 1
+            EnableNonSecurity: False
+            ComplianceLevel: MEDIUM
+            PatchFilterGroup:
+              PatchFilters:
+                - Key: PRODUCT
+                  Values: [AmazonLinux2]
+                - Key: CLASSIFICATION
+                  Values: [Security]
+                - Key: SEVERITY
+                  Values: [Medium]
+          - ApproveAfterDays: 1
+            EnableNonSecurity: False
+            ComplianceLevel: LOW
+            PatchFilterGroup:
+              PatchFilters:
+                - Key: PRODUCT
+                  Values: [AmazonLinux2]
+                - Key: CLASSIFICATION
+                  Values: [Security]
+                - Key: SEVERITY
+                  Values: [Low]
+          - ApproveAfterDays: 1
+            EnableNonSecurity: True
+            ComplianceLevel: INFORMATIONAL
+            PatchFilterGroup:
+              PatchFilters:
+                - Key: PRODUCT
+                  Values: [AmazonLinux2]
+                - Key: CLASSIFICATION
+                  Values: ["*"]
+                - Key: SEVERITY
+                  Values: ["*"]
+  
+  MaintenceWindowPatchApply:
+    Type: AWS::SSM::MaintenanceWindow
+    Properties:
+      Name: Patch-Apply
+      Schedule: "rate(6 hour)"
+      Duration: 1
+      AllowUnassociatedTargets: True
+      Cutoff: 0
+  MaintenanceWindowTargetPatchNatApply:
+    Type: AWS::SSM::MaintenanceWindowTarget
+    Properties:
+      WindowId: !Ref MaintenceWindowPatchApply
+      ResourceType: INSTANCE
+      Targets:
+        - Key: tag:Patch Target System
+          Values:
+            - NAT
+  MaintenanceWindowTaskPatchNatApply:
+    Type: AWS::SSM::MaintenanceWindowTask
+    Properties:
+      Name: PatchingNAT
+      Priority: 1
+      TaskArn: AWS-RunPatchBaseline
+      TaskType: RUN_COMMAND
+      WindowId: !Ref MaintenceWindowPatchApply
+      MaxConcurrency: 50%
+      MaxErrors: 50%
+      Targets:
+        - Key: WindowTargetIds
+          Values:
+            - !Ref MaintenanceWindowTargetPatchNatApply
+      TaskInvocationParameters:
+        MaintenanceWindowRunCommandParameters:
+          TimeoutSeconds: 1800
+          Parameters:
+            Operation: [Install]
+            RebootOption: [RebootIfNeeded]
