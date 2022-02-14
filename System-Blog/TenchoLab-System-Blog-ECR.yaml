@@ -1,12 +1,6 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
 Resources:
-  BlogECRMySQL:
-    Type: AWS::ECR::Repository
-    Properties:
-      RepositoryName: blog/mysql
-      ImageScanningConfiguration:
-        ScanOnPush: True
   BlogECRWordpress:
     Type: AWS::ECR::Repository
     Properties:
@@ -32,11 +26,7 @@ Resources:
             ]
           }
 Outputs: 
-  ECRMySQLName:
-    Value: !Ref BlogECRMySQL
   ECRWordpressName:
     Value: !Ref BlogECRWordpress
-  ECRMySQLUri:
-    Value: !GetAtt BlogECRMySQL.RepositoryUri
   ECRWordpressUri:
     Value: !GetAtt BlogECRWordpress.RepositoryUri

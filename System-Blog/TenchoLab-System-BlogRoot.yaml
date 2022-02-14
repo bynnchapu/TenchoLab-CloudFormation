@@ -59,12 +59,6 @@ Resources:
       TemplateURL: ./TenchoLab-System-Blog-Logs.yaml
       Parameters:
         SystemName: !Ref SystemName
-  #ServiceDiscoveryStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: ./TenchoLab-System-Blog-ServiceDiscovery.yaml
-  #    Parameters:
-  #      SystemName: !Ref SystemName
   ECRStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -82,7 +76,6 @@ Resources:
       Parameters:
         SystemName: !Ref SystemName
         CodeBuildServiceRole: !GetAtt IAMStack.Outputs.CodeBuildServiceRole
-        #ECRMySQL: !GetAtt ECRStack.Outputs.ECRMySQLName
         ECRWordpress: !GetAtt ECRStack.Outputs.ECRWordpressName
   CodePipelineStack:
     Type: AWS::CloudFormation::Stack
@@ -101,16 +94,11 @@ Resources:
       Parameters:
         SystemName: !Ref SystemName
         SGECS: !GetAtt SGStack.Outputs.SGECS
-        #ServiceDiscoveryMySQLArn: !GetAtt ServiceDiscoveryStack.Outputs.MySQLArn
-        #ServiceDiscoveryWordpressArn: !GetAtt ServiceDiscoveryStack.Outputs.WordpressArn
         ELBTargetGroupArn: !GetAtt ELBStack.Outputs.ELBTargetGroupArn
         ECSTaskExecutionRole: !GetAtt IAMStack.Outputs.ECSTaskExecutionRole
         ECSWordpressTaskRoleArn: !GetAtt IAMStack.Outputs.ECSWordpressTaskRoleArn
-        #ECRMySQLRepositoryUri: !GetAtt ECRStack.Outputs.ECRMySQLUri
         ECRWordpressRepositoryUri: !GetAtt ECRStack.Outputs.ECRWordpressUri
-        #LogsMySQL: !GetAtt LogsStack.Outputs.LogsMySQL
         LogsWordpress: !GetAtt LogsStack.Outputs.LogsWordpress
-        #EFSVolumeMySQL: !GetAtt EFSStack.Outputs.EFSMySQL
         EFSVolumeWordpress: !GetAtt EFSStack.Outputs.EFSWordpress
   Route53Stack:
     Type: AWS::CloudFormation::Stack

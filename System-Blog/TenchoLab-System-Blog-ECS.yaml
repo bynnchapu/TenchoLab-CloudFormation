@@ -5,26 +5,16 @@ Parameters:
     Type: String
   SGECS:
     Type: String
-  #ServiceDiscoveryMySQLArn:
-  #  Type: String
-  #ServiceDiscoveryWordpressArn:
-  #  Type: String
   ELBTargetGroupArn:
     Type: String
   ECSTaskExecutionRole:
     Type: String
   ECSWordpressTaskRoleArn:
     Type: String
-  #ECRMySQLRepositoryUri:
-  #  Type: String
   ECRWordpressRepositoryUri:
     Type: String
-  #LogsMySQL:
-  #  Type: String
   LogsWordpress:
     Type: String
-  #EFSVolumeMySQL:
-  #  Type: String
   EFSVolumeWordpress:
     Type: String
 Resources:
@@ -44,27 +34,6 @@ Resources:
         - CapacityProvider: FARGATE_SPOT
           Weight: 0
 
-  #BlogECSMySQLService:
-  #  Type: AWS::ECS::Service
-  #  Properties:
-  #    ServiceName: MySQL
-  #    Cluster: !Ref BlogECSCluster
-  #    DesiredCount: 0
-  #    TaskDefinition: !Ref BlogECSMySQLTaskDefinition
-  #    LaunchType: FARGATE
-  #    NetworkConfiguration:
-  #      AwsvpcConfiguration:
-  #        AssignPublicIp: ENABLED
-  #        SecurityGroups:
-  #          - !Ref SGECS
-  #        Subnets:
-  #          - !ImportValue VPC-PublicSubnetIdDHCPA
-  #          - !ImportValue VPC-PublicSubnetIdDHCPC
-  #          - !ImportValue VPC-PublicSubnetIdDHCPD
-  #    ServiceRegistries:
-  #      - ContainerName: MySQL
-  #        RegistryArn: !Ref ServiceDiscoveryMySQLArn
-
   BlogECSWordpressService:
     Type: AWS::ECS::Service
     Properties:
@@ -78,61 +47,18 @@ Resources:
           Weight: 1
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          AssignPublicIp: DISABLED
           SecurityGroups:
             - !Ref SGECS
           Subnets:
-            - !ImportValue VPC-PublicSubnetIdDHCPA
-            - !ImportValue VPC-PublicSubnetIdDHCPC
-            - !ImportValue VPC-PublicSubnetIdDHCPD
-      #ServiceRegistries:
-      #  - ContainerName: Wordpress
-      #    RegistryArn: !Ref ServiceDiscoveryWordpressArn
+            - !ImportValue VPC-ProtectedSubnetIdDHCPA
+            - !ImportValue VPC-ProtectedSubnetIdDHCPC
+            - !ImportValue VPC-ProtectedSubnetIdDHCPD
       LoadBalancers:
         - ContainerName: Wordpress
           ContainerPort: 80
           TargetGroupArn: !Ref ELBTargetGroupArn
 
-  #BlogECSMySQLTaskDefinition:
-  #  Type: AWS::ECS::TaskDefinition
-  #  Properties:
-  #    Family: !Sub ${SystemName}-MySQL
-  #    Cpu: 256
-  #    Memory: 512
-  #    NetworkMode: awsvpc
-  #    RequiresCompatibilities:
-  #      - "FARGATE"
-  #    ExecutionRoleArn: !Ref ECSTaskExecutionRole
-  #    ContainerDefinitions:
-  #      - Name: MySQL
-  #        Image: !Ref ECRMySQLRepositoryUri
-  #        PortMappings:
-  #          - ContainerPort: 3306
-  #            Protocol: tcp
-  #        Secrets:
-  #          - Name: MYSQL_DATABASE
-  #            ValueFrom: /System/Blog/MySQL/MYSQL_DATABASE
-  #          - Name: MYSQL_ROOT_PASSWORD
-  #            ValueFrom: /System/Blog/MySQL/MYSQL_ROOT_PASSWORD
-  #          - Name: MYSQL_USER
-  #            ValueFrom: /System/Blog/MySQL/MYSQL_USER
-  #          - Name: MYSQL_PASSWORD
-  #            ValueFrom: /System/Blog/MySQL/MYSQL_PASSWORD
-  #        MountPoints:
-  #          - SourceVolume: MySQL-Volume
-  #            ContainerPath: "/var/lib/mysql"
-  #        LogConfiguration:
-  #          LogDriver: awslogs
-  #          Options:
-  #            awslogs-group: !Ref LogsMySQL
-  #            awslogs-region: !Ref AWS::Region
-  #            awslogs-stream-prefix: ecs
-  #    Volumes:
-  #      - Name: MySQL-Volume
-  #        EFSVolumeConfiguration:
-  #          FilesystemId: !Ref EFSVolumeMySQL
-  #          TransitEncryption: ENABLED
-  
   BlogECSWordpressTaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
