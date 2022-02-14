@@ -160,13 +160,6 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: "0.0.0.0/0"
       GatewayId: !Ref InternetGW
-  PublicDefaultRouteV6:
-    Type: AWS::EC2::Route
-    DependsOn: InternetGWAttachment
-    Properties:
-      RouteTableId: !Ref PublicRouteTable
-      DestinationIpv6CidrBlock: "::/0"
-      GatewayId: !Ref InternetGW
   PublicSubnetFixARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
