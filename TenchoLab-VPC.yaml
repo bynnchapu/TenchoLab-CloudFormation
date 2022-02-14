@@ -463,7 +463,11 @@ Resources:
           SubnetId: !Ref PublicSubnetDHCPA
       Tags:
         - Key: Name
-          Value: NATInstance
+          Value: NAT
+        - Key: Patch Group
+          Value: NAT
+        - Key: Patch Target System
+          Value: NAT
       UserData: 
         Fn::Base64: |
           #!/bin/sh
