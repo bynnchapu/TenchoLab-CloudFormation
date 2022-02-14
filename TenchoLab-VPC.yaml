@@ -453,7 +453,7 @@ Resources:
     Properties:
       AvailabilityZone: !Select [ 0, !GetAZs '' ]
       IamInstanceProfile: !ImportValue IAM-Ec2ProfiletNatInstance
-      ImageId: ami-08a8688fb7eacb171
+      ImageId: ami-08d56ac42e2d4a08b
       InstanceType: t3.micro
       NetworkInterfaces:
         - DeviceIndex: 0
