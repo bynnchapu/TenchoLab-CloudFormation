@@ -54,6 +54,7 @@ Resources:
       AutoMinorVersionUpgrade: True
       PreferredBackupWindow: 16:00-16:30
       BackupRetentionPeriod: 7
+      CopyTagsToSnapshot: True
       DeleteAutomatedBackups: True
       DeletionProtection: True
   RDSParameterGroup:
