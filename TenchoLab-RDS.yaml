@@ -43,6 +43,8 @@ Resources:
         - general
         - error
         - slowquery
+      MonitoringInterval: 60
+      MonitoringRoleArn: !ImportValue IAM-RoleRDSEnhancedMonitorArn
       MasterUsername: !Ref DBMasterName
       MasterUserPassword: !Ref DBMasterPassword
       StorageType: gp2

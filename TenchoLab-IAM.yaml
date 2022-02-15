@@ -74,6 +74,22 @@ Resources:
             Action: ec2:ModifyInstanceMetadataOptions
             Resource: "*"
 
+  IAMRoleRDSEnhancedMonitor:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: RDS-EnhancedMonitor
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - monitoring.rds.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
 Outputs:
   IAMRoleEc2Default:
     Value: !Ref IAMProfileEc2DefaultInstance
@@ -83,3 +99,7 @@ Outputs:
     Value: !Ref IAMEc2ProfileNatInstance
     Export:
       Name: IAM-Ec2ProfiletNatInstance
+  IAMRoleRDSEnhancedMonitorArn:
+    Value: !GetAtt IAMRoleRDSEnhancedMonitor.Arn
+    Export:
+      Name: IAM-RoleRDSEnhancedMonitorArn
