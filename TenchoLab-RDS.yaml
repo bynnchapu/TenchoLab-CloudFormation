@@ -38,6 +38,7 @@ Resources:
       VPCSecurityGroups:
         - !Ref RDSSG
       StorageEncrypted: True 
+      EnableIAMDatabaseAuthentication: True
       EnableCloudwatchLogsExports:
         - audit
         - general
