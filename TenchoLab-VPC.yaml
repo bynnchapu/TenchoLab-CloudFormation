@@ -72,6 +72,15 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-${AWS::Region}
+  TenchoLabVPCFlowLogs:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      ResourceId: !Ref TenchoLabVPC
+      ResourceType: VPC
+      TrafficType: ALL
+      LogDestinationType: s3
+      MaxAggregationInterval: 60
+      LogDestination: !ImportValue Security-S3Arn
   # InternetGateway
   InternetGW:
     Type: AWS::EC2::InternetGateway
