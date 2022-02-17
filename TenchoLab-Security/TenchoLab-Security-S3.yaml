@@ -10,9 +10,11 @@ Resources:
       BucketName: !Ref LogBucketName
       BucketEncryption:
         ServerSideEncryptionConfiguration:
-          - BucketKeyEnabled: True
-            ServerSideEncryptionByDefault:
+          - ServerSideEncryptionByDefault:
               SSEAlgorithm: AES256
+      LoggingConfiguration:
+        DestinationBucketName: !Ref LogBucketName
+        LogFilePrefix: !Sub S3AccessLog/${LogBucketName}
       PublicAccessBlockConfiguration:
         BlockPublicAcls: True
         BlockPublicPolicy: True
@@ -80,3 +82,15 @@ Resources:
             Condition:
               Bool:
                 'aws:SecureTransport': false
+          # S3 Access Log
+          - Sid: AccessLogs
+            Effect: Allow
+            Principal:
+              Service: logging.s3.amazonaws.com
+            Action: s3:PutObject
+            Resource: !Sub 'arn:aws:s3:::${SecurityS3}/*'
+Outputs:
+  SecurityS3Arn:
+    Value: !GetAtt SecurityS3.Arn
+    Export:
+      Name: Security-S3Arn
