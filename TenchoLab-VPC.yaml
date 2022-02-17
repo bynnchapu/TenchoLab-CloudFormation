@@ -93,6 +93,17 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       InternetGatewayId: !Ref InternetGW
+  # Endpoint
+  S3Endpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      VpcEndpointType: Gateway
+      RouteTableIds:
+        - !Ref PublicRouteTable
+        - !Ref ProtectedRouteTable
+        - !Ref PrivateRouteTable
   
   # Public Subnet
   PublicSubnetFixA:
