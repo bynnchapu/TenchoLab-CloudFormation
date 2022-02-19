@@ -9,11 +9,6 @@ Resources:
   ZabbixACM:
     Type: AWS::CertificateManager::Certificate
     Properties:
-      DomainName: !Ref FQDN
-      ValidationMethod: DNS
-      DomainValidationOptions:
-        - DomainName: !Ref FQDN
-          HostedZoneId: !ImportValue Route53-AwsTenchoLabNetHostZoneId
       Tags:
         - Key: Name
           Value: !Ref SystemName
