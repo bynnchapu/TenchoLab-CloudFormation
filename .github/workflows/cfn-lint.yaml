@@ -1,11 +1,7 @@
 name: "Run CloudFormation linter"
 
 on:
-  pull_request:
-    types: ["synchronize", "opend"]
-    paths:
-      - "**.yaml"
-      - "**.yml"
+  push:
 
 jobs:
   test:
