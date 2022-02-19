@@ -2,6 +2,9 @@ name: "Run CloudFormation linter"
 
 on:
   push:
+    branches:
+      - "main"
+      - "develop"
 
 jobs:
   test:
