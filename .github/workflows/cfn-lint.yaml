@@ -28,4 +28,16 @@ jobs:
       - name: Add problem matcher
         run: echo "::add-matcher::.github/cfn-lint.json"
       - name: Lint by cfn-lint
-        run: find . -type d -name '.github' -prune -o -name "*.yaml" -type f -exec sh -c 'echo "=== {} ==="; cfn-lint {} -f parseable && echo "No Error!"' \;
+        shell: bash
+        run: |
+          for STACK_PATH in $(find . -type d -name '.github' -prune -o -name "*.yaml" -type f -print)
+          do
+            echo "=== ${STACK_NAME} ==="
+            cfn-lint ${STACK_PATH} -f parseable && echo "No Error!" || FAILED=$((++FAILED))
+          done
+          if [ -n ${FAILED} ];
+          then
+            false
+          else
+            true
+          fi
