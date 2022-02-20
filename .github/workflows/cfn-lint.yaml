@@ -32,7 +32,7 @@ jobs:
         run: |
           for STACK_PATH in $(find . -type d -name '.github' -prune -o -name "*.yaml" -type f -print)
           do
-            echo "=== ${STACK_NAME} ==="
+            echo "=== ${STACK_PATH} ==="
             cfn-lint ${STACK_PATH} -f parseable && echo "No Error!" || FAILED=$((++FAILED))
           done
           if [ -n ${FAILED} ];
