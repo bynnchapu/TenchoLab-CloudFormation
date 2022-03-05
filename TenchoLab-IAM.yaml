@@ -25,10 +25,10 @@ Resources:
       Roles:
         - !Ref IAMRoleEc2Default
 
-  IAMRoleEc2Nat:
+  IAMRoleEc2Bastion:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: EC2-NAT
+      RoleName: EC2-Bastion
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
@@ -55,12 +55,12 @@ Resources:
             Effect: Allow
             Action: ec2:ModifyInstanceAttribute
             Resource: "*"
-  IAMEc2ProfileNatInstance:
+  IAMEc2ProfileBastionInstance:
     Type: AWS::IAM::InstanceProfile
     Properties:
-      InstanceProfileName: EC2-Nat
+      InstanceProfileName: EC2-Bastion
       Roles:
-        - !Ref IAMRoleEc2Nat
+        - !Ref IAMRoleEc2Bastion
   IAMPolicyEc2AllowModifyInstanceMetadataOptions:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -95,10 +95,10 @@ Outputs:
     Value: !Ref IAMProfileEc2DefaultInstance
     Export:
       Name: IAM-Ec2ProfileDefaultInstance
-  IAMRoleEc2Nat:
-    Value: !Ref IAMEc2ProfileNatInstance
+  IAMRoleEc2Bastion:
+    Value: !Ref IAMEc2ProfileBastionInstance
     Export:
-      Name: IAM-Ec2ProfiletNatInstance
+      Name: IAM-Ec2ProfiletBastionInstance
   IAMRoleRDSEnhancedMonitorArn:
     Value: !GetAtt IAMRoleRDSEnhancedMonitor.Arn
     Export:

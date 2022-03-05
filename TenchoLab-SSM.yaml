@@ -1,13 +1,13 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
 Resources:
-  PatchMGRBaselineNat:
+  PatchMGRBaselineBastion:
     Type: AWS::SSM::PatchBaseline
     Properties:
-      Name: TenchoLab-NATBaseline
+      Name: TenchoLab-BastionBaseline
       OperatingSystem: AMAZON_LINUX_2
       PatchGroups:
-        - NAT
+        - Bastion
       ApprovalRules:
         PatchRules:
           - ApproveAfterDays: 1
@@ -63,7 +63,7 @@ Resources:
       Duration: 1
       AllowUnassociatedTargets: True
       Cutoff: 0
-  MaintenanceWindowTargetPatchNatApply:
+  MaintenanceWindowTargetPatchBastionApply:
     Type: AWS::SSM::MaintenanceWindowTarget
     Properties:
       WindowId: !Ref MaintenceWindowPatchApply
@@ -71,11 +71,11 @@ Resources:
       Targets:
         - Key: tag:Patch Target System
           Values:
-            - NAT
-  MaintenanceWindowTaskPatchNatApply:
+            - Bastion
+  MaintenanceWindowTaskPatchBastionApply:
     Type: AWS::SSM::MaintenanceWindowTask
     Properties:
-      Name: PatchingNAT
+      Name: PatchingBastion
       Priority: 1
       TaskArn: AWS-RunPatchBaseline
       TaskType: RUN_COMMAND
@@ -85,7 +85,7 @@ Resources:
       Targets:
         - Key: WindowTargetIds
           Values:
-            - !Ref MaintenanceWindowTargetPatchNatApply
+            - !Ref MaintenanceWindowTargetPatchBastionApply
       TaskInvocationParameters:
         MaintenanceWindowRunCommandParameters:
           TimeoutSeconds: 1800

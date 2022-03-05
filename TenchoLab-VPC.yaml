@@ -303,7 +303,7 @@ Resources:
     Properties:
       RouteTableId: !Ref ProtectedRouteTable
       DestinationCidrBlock: "0.0.0.0/0"
-      InstanceId: !Ref NatInstance
+      InstanceId: !Ref BastionInstance
   ProtectedSubnetFixARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -440,13 +440,13 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnetDHCPD
 
-  #Nat Instance
-  NatInstanceSG:
+  #Bastion Instance
+  BastionInstanceSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
       VpcId: !Ref TenchoLabVPC
-      GroupName: SG-NAT
-      GroupDescription: SG-NAT
+      GroupName: SG-Bastion
+      GroupDescription: SG-Bastion
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: 80
@@ -474,26 +474,26 @@ Resources:
           ToPort: 443
           CidrIp: 0.0.0.0/0
           Description: To Any
-  NatInstance:
+  BastionInstance:
     Type: AWS::EC2::Instance
     Properties:
       AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      IamInstanceProfile: !ImportValue IAM-Ec2ProfiletNatInstance
-      ImageId: ami-08d56ac42e2d4a08b
-      InstanceType: t3.micro
+      IamInstanceProfile: !ImportValue IAM-Ec2ProfiletBastionInstance
+      ImageId: ami-061124182d8a9db73 # Amazon Linux 2 AMI (HVM) - Kernel 5.10, SSD Volume Type on 2022/03/03
+      InstanceType: t4g.micro
       NetworkInterfaces:
         - DeviceIndex: 0
           AssociatePublicIpAddress: True
           GroupSet:
-            - !Ref NatInstanceSG
+            - !Ref BastionInstanceSG
           SubnetId: !Ref PublicSubnetDHCPA
       Tags:
         - Key: Name
-          Value: NAT
+          Value: Bastion
         - Key: Patch Group
-          Value: NAT
+          Value: Bastion
         - Key: Patch Target System
-          Value: NAT
+          Value: Bastion
       UserData: 
         Fn::Base64: |
           #!/bin/bash -x
@@ -508,13 +508,14 @@ Resources:
           # Use only IMDSv2
           aws ec2 modify-instance-metadata-options --instance-id $INSTANCE_ID --http-tokens required --http-endpoint enabled --region ${AWS_REGION}
           # Configure Hostname
-          sudo hostnamectl set-hostname nat-instance
-          # Set up NAT Instance
+          sudo hostnamectl set-hostname bastion.aws.tencho-lab.net
+          # Set up Bastion (NAT) Instance
           echo net.ipv4.ip_forward=1 | sudo tee /etc/sysctl.d/98-nat-instance.conf
           sudo /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-          sudo yum install -y iptables-services
+          sudo yum install -y iptables-services tmux
           sudo service iptables save
           sudo systemctl enable iptables
+          sudo curl -o /etc/tmux.conf https://raw.githubusercontent.com/bynnchapu/dotfiles/master/tmux.conf.dotfile
           sudo reboot
 
 Outputs:
