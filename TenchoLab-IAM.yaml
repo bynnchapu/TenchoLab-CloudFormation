@@ -43,6 +43,12 @@ Resources:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
         - !Ref IAMPolicyEc2AllowModifyInstanceAttiribute
         - !Ref IAMPolicyEc2AllowModifyInstanceMetadataOptions
+  IAMEc2ProfileBastionInstance:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: EC2-Bastion
+      Roles:
+        - !Ref IAMRoleEc2Bastion
   IAMPolicyEc2AllowModifyInstanceAttiribute:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -55,12 +61,6 @@ Resources:
             Effect: Allow
             Action: ec2:ModifyInstanceAttribute
             Resource: "*"
-  IAMEc2ProfileBastionInstance:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      InstanceProfileName: EC2-Bastion
-      Roles:
-        - !Ref IAMRoleEc2Bastion
   IAMPolicyEc2AllowModifyInstanceMetadataOptions:
     Type: AWS::IAM::ManagedPolicy
     Properties:
