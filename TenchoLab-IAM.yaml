@@ -1,6 +1,41 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
 Resources:
+  # Assume role for Administrator
+  IAMRoleAssumeAdministrator:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AssumeRole-Administrator
+      MaxSessionDuration: 43200
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - !Sub "arn:${AWS::Partition}:iam::${AWS::AccountId}:root"
+            Action:
+              - sts:AssumeRole
+            Condition:
+              Bool:
+                "aws:MultiFactorAuthPresent": "true"
+      Path: /
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AdministratorAccess"
+  IAMPolicyAllowAssumeRoleToAdministrator:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: Custom-AllowAssumeRoleToAdministrator
+      Path: /
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - sts:AssumeRole
+            Resource:
+              - !GetAtt IAMRoleAssumeAdministrator.Arn
+
   IAMRoleEc2Default:
     Type: AWS::IAM::Role
     Properties:
@@ -130,6 +165,29 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+  # Group for CLI
+  IAMGroupCLIUser:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: CLIUser
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
+        - !Ref IAMPolicyAllowAssumeRoleToAdministrator
+  # User for WSL
+  IAMUserWSL:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: WSL
+      Groups:
+        - !Ref IAMGroupCLIUser
+  # User for moon
+  IAMUserMoon:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: moon
+      Groups:
+        - !Ref IAMGroupCLIUser
+
 Outputs:
   IAMRoleEc2Default:
     Value: !Ref IAMProfileEc2DefaultInstance
