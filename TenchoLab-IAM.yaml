@@ -17,6 +17,45 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        - !Ref IAMPolicyEc2AllowExportSessionLogs
+  IAMPolicyEc2AllowExportSessionLogs:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: Custom-EC2AllowExportSessionLogs
+      Path: /
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - ssmmessages:CreateControlChannel
+              - ssmmessages:CreateDataChannel
+              - ssmmessages:OpenControlChannel
+              - ssmmessages:OpenDataChannel
+              - ssm:UpdateInstanceInformation
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+              - logs:DescribeLogGroups
+              - logs:DescribeLogStreams
+            Resource: "*"
+          - Effect: Allow
+            Action:
+              - s3:PutObject
+            Resource: arn:aws:s3:::tencho-lab-security-log/SessionManager/*
+          - Effect: Allow
+            Action:
+              - s3:GetEncryptionConfiguration
+            Resource: "*"
+          #- Effect: Allow
+          #  Action:
+          #    - kms:Decrypt
+          #  Resource: key-name
+          #- Effect: Allow
+          #  Action: kms:GenerateDataKey
+          #  Resource: "*"
   
   IAMProfileEc2DefaultInstance:
     Type: AWS::IAM::InstanceProfile
@@ -43,6 +82,7 @@ Resources:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
         - !Ref IAMPolicyEc2AllowModifyInstanceAttiribute
         - !Ref IAMPolicyEc2AllowModifyInstanceMetadataOptions
+        - !Ref IAMPolicyEc2AllowExportSessionLogs
   IAMEc2ProfileBastionInstance:
     Type: AWS::IAM::InstanceProfile
     Properties:
