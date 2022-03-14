@@ -41,6 +41,7 @@ Resources:
       Cluster: !Ref BlogECSCluster
       DesiredCount: 1
       TaskDefinition: !Ref BlogECSWordpressTaskDefinition
+      EnableExecuteCommand: True
       CapacityProviderStrategy:
         - CapacityProvider: FARGATE_SPOT
           Base: 1

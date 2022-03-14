@@ -127,6 +127,18 @@ Resources:
                   - cloudfront:ListInvalidations
                   - cloudfront:GetInvalidation
                 Resource: '*'
+        - PolicyName: AllowExecBySSM
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: AllowGetParameter
+                Effect: Allow
+                Action:
+                  - ssmmessages:CreateControlChannel
+                  - ssmmessages:CreateDataChannel
+                  - ssmmessages:OpenControlChannel
+                  - ssmmessages:OpenDataChannel
+                Resource: "*"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSForWordPressPluginPolicy
 
