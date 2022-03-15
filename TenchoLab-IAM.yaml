@@ -176,6 +176,9 @@ Resources:
           - Effect: Allow
             Resource:
               - !ImportValue S3-GithubActionsArtifactArn
+              - !Sub
+                - "${GithubActionsArtifactArn}/*"
+                - GithubActionsArtifactArn: !ImportValue S3-GithubActionsArtifactArn
             Action:
               - s3:*
   IAMUserAllowAccessS3GithubActionsArtifact:
