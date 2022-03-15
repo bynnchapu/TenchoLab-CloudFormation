@@ -449,15 +449,25 @@ Resources:
       GroupDescription: SG-Bastion
       SecurityGroupIngress:
         - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          SourcePrefixListId: !Ref ProtectedPrefixList
+          Description: From Protected (SSH)
+        - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
           SourcePrefixListId: !Ref ProtectedPrefixList
-          Description: From Protected
+          Description: From Protected (HTTP)
         - IpProtocol: tcp
           FromPort: 443
           ToPort: 443
           SourcePrefixListId: !Ref ProtectedPrefixList
-          Description: From Protected
+          Description: From Protected (HTTPS)
+        - IpProtocol: tcp
+          FromPort: 9418
+          ToPort: 9418
+          SourcePrefixListId: !Ref ProtectedPrefixList
+          Description: From Protected (Git)
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 22
@@ -474,6 +484,11 @@ Resources:
           ToPort: 443
           CidrIp: 0.0.0.0/0
           Description: To Any
+        - IpProtocol: tcp
+          FromPort: 9418
+          ToPort: 9418
+          CidrIp: 0.0.0.0/0
+          Description: To Any (Git)
   BastionInstance:
     Type: AWS::EC2::Instance
     Properties:
