@@ -165,6 +165,26 @@ Resources:
       Path: /
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+
+  IAMPolicyAllowAccessS3GithubActionsArtifact:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: Custom-AllowAccessGithubActionsArtifact
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Resource:
+              - !ImportValue S3-GithubActionsArtifactArn
+            Action:
+              - s3:*
+  IAMUserAllowAccessS3GithubActionsArtifact:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: GithubActions-Ansible
+      ManagedPolicyArns:
+        - !Ref IAMPolicyAllowAccessS3GithubActionsArtifact
+        
   # Group for CLI
   IAMGroupCLIUser:
     Type: AWS::IAM::Group

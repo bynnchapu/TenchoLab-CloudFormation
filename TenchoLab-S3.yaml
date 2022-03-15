@@ -73,3 +73,39 @@ Resources:
             Condition:
               Bool:
                 'aws:SecureTransport': false
+  TenchoLabS3GithubActionsArtifact:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: tencho-lab-github-actions-artifact
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: True
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True 
+        RestrictPublicBuckets: True
+  TenchoLabS3GithubActionsArtifactBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TenchoLabS3GithubActionsArtifact
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+            - !GetAtt 'TenchoLabS3GithubActionsArtifact.Arn'
+            - !Sub '${TenchoLabS3GithubActionsArtifact.Arn}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
+Outputs:
+  TenchoLabS3GithubActionsArtifactArn:
+    Value: !GetAtt TenchoLabS3GithubActionsArtifact.Arn
+    Export:
+      Name: S3-GithubActionsArtifactArn
