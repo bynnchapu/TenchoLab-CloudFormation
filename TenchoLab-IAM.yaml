@@ -53,6 +53,8 @@ Resources:
       ManagedPolicyArns:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
         - !Ref IAMPolicyEc2AllowExportSessionLogs
+        - !Ref IAMPolicyAllowAccessS3GithubActionsArtifact
+        - !Ref IAMPolicyEc2AllowReadSSMAnsible
   IAMPolicyEc2AllowExportSessionLogs:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -79,7 +81,9 @@ Resources:
           - Effect: Allow
             Action:
               - s3:PutObject
-            Resource: arn:aws:s3:::tencho-lab-security-log/SessionManager/*
+            Resource:
+              - arn:aws:s3:::tencho-lab-security-log/SessionManager/*
+              - arn:aws:s3:::tencho-lab-security-log/ImageBuilder/*
           - Effect: Allow
             Action:
               - s3:GetEncryptionConfiguration
@@ -91,6 +95,26 @@ Resources:
           #- Effect: Allow
           #  Action: kms:GenerateDataKey
           #  Resource: "*"
+  IAMPolicyEc2AllowReadSSMAnsible:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: Custom-EC2AllowDecryptSSMAnsible
+      Path: /
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowGetParameter
+            Effect: Allow
+            Action:
+              - ssm:GetParameters
+            Resource: "arn:aws:ssm:ap-northeast-1:499862365437:parameter/Ansible/Vault"
+          - Sid: AllowDecryptSSMKey
+            Effect: Allow
+            Action:
+              - kms:Decrypt
+            Resource:
+              # Managed key alias of alias/aws/ssm
+              - 'arn:aws:kms:ap-northeast-1:499862365437:key/0e99ac32-deea-4bae-adf5-7744cc3ac3bb'
   
   IAMProfileEc2DefaultInstance:
     Type: AWS::IAM::InstanceProfile
@@ -98,6 +122,34 @@ Resources:
       InstanceProfileName: EC2-Default
       Roles:
         - !Ref IAMRoleEc2Default
+
+  IAMRoleEc2ImageBuilder:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: EC2-ImageBuilder
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSSMManagedInstanceCore"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/EC2InstanceProfileForImageBuilderECRContainerBuilds"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/EC2InstanceProfileForImageBuilder"
+        - !Ref IAMPolicyEc2AllowExportSessionLogs
+        - !Ref IAMPolicyAllowAccessS3GithubActionsArtifact
+        - !Ref IAMPolicyEc2AllowReadSSMAnsible
+  IAMProfileEc2ImageBuilder:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: EC2-ImageBuilder
+      Roles:
+        - !Ref IAMRoleEc2ImageBuilder
 
   IAMRoleEc2Bastion:
     Type: AWS::IAM::Role
@@ -118,6 +170,8 @@ Resources:
         - !Ref IAMPolicyEc2AllowModifyInstanceAttiribute
         - !Ref IAMPolicyEc2AllowModifyInstanceMetadataOptions
         - !Ref IAMPolicyEc2AllowExportSessionLogs
+        - !Ref IAMPolicyAllowAccessS3GithubActionsArtifact
+        - !Ref IAMPolicyEc2AllowReadSSMAnsible
   IAMEc2ProfileBastionInstance:
     Type: AWS::IAM::InstanceProfile
     Properties:
