@@ -132,6 +132,12 @@ Resources:
               "default": "hello-world-playbook.yml",
               "allowedPattern": "[(a-z_A-Z0-9\\-\\.)/]+(.yml|.yaml)$"
             },
+            "RequirementsFile": {
+              "type": "String",
+              "description": "(Optional) Specify requirements file if needed.",
+              "default": "requrements.yaml",
+              "allowedPattern": "[(a-z_A-Z0-9\\-\\.)/]+(.yml|.yaml)$"
+            },
             "ExtraVariables": {
               "type": "String",
               "description": "(Optional) Additional variables to pass to Ansible at runtime. Enter key/value pairs separated by a space. For example: color=red flavor=cherry",
@@ -223,6 +229,9 @@ Resources:
                   "if [ ! -f  \"${PlaybookFile}\" ] ; then",
                   "   echo \"The specified Playbook file doesn't exist in the downloaded bundle. Please review the relative path and file name.\" >&2",
                   "   exit 2",
+                  "fi",
+                  "if [ ! -f  \"${RequirementsFile}\" ] ; then",
+                  "   ansible-galaxy install -r \"${RequirementsFile}\"",
                   "fi",
                   "if  [[ \"{{Check}}\" == True ]] ; then",
                   "   ansible-playbook -i \"localhost,\" --check -c local -e \"{{ExtraVariables}}\" \"{{Verbose}}\" \"${PlaybookFile}\"",

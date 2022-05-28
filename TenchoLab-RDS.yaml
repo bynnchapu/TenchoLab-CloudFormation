@@ -29,7 +29,7 @@ Resources:
       - RDSLogsSlowQuery
     Properties:
       DBInstanceIdentifier: !Ref DBName
-      DBInstanceClass: db.t3.micro
+      DBInstanceClass: db.t4g.micro
       Engine: mysql
       EngineVersion: 8.0.27
       DBParameterGroupName: !Ref RDSParameterGroup
