@@ -180,6 +180,12 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: "0.0.0.0/0"
       GatewayId: !Ref InternetGW
+  PublicVPNRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 172.24.0.0/24
+      InstanceId: !Ref VPNInstance
   PublicSubnetFixARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -304,6 +310,12 @@ Resources:
       RouteTableId: !Ref ProtectedRouteTable
       DestinationCidrBlock: "0.0.0.0/0"
       InstanceId: !Ref BastionInstance
+  ProtectedVPNRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref ProtectedRouteTable
+      DestinationCidrBlock: 172.24.0.0/24
+      InstanceId: !Ref VPNInstance
   ProtectedSubnetFixARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -340,6 +352,22 @@ Resources:
       VpcId: !Ref TenchoLabVPC
       GroupName: SG-Default-Protected
       GroupDescription: SG-Default-Protected
+  ProtectedSubnetDefaultSGIngressSSH:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref ProtectedSubnetDefaultSG
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !Ref VPNInstanceSG
+  ProtectedSubnetDefaultSGIngressRDP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref ProtectedSubnetDefaultSG
+      IpProtocol: tcp
+      FromPort: 3389
+      ToPort: 3389
+      SourceSecurityGroupId: !Ref VPNInstanceSG
 
   # Private Subnet
   PrivateSubnetFixA:
@@ -409,6 +437,12 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName}-Private
+  PrivateVPNRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 172.24.0.0/24
+      InstanceId: !Ref VPNInstance
   PrivateSubnetFixARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -439,6 +473,28 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTable
       SubnetId: !Ref PrivateSubnetDHCPD
+  PrivateSubnetDefaultSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      GroupName: SG-Default-Private
+      GroupDescription: SG-Default-Private
+  PrivateSubnetDefaultSGIngressSSH:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref PrivateSubnetDefaultSG
+      IpProtocol: tcp
+      FromPort: 22
+      ToPort: 22
+      SourceSecurityGroupId: !Ref VPNInstanceSG
+  PrivateSubnetDefaultSGIngressRDP:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref PrivateSubnetDefaultSG
+      IpProtocol: tcp
+      FromPort: 3389
+      ToPort: 3389
+      SourceSecurityGroupId: !Ref VPNInstanceSG
 
   #Bastion Instance
   BastionInstanceSG:
@@ -448,47 +504,22 @@ Resources:
       GroupName: SG-Bastion
       GroupDescription: SG-Bastion
       SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
+        - IpProtocol: -1
           SourcePrefixListId: !Ref ProtectedPrefixList
-          Description: From Protected (SSH)
+          Description: From Protected (Any)
         - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          SourcePrefixListId: !Ref ProtectedPrefixList
-          Description: From Protected (HTTP)
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          SourcePrefixListId: !Ref ProtectedPrefixList
-          Description: From Protected (HTTPS)
-        - IpProtocol: tcp
-          FromPort: 9418
-          ToPort: 9418
-          SourcePrefixListId: !Ref ProtectedPrefixList
-          Description: From Protected (Git)
+          FromPort: 8388
+          ToPort: 8388
+          CidrIp: 0.0.0.0/0
+          Description: From Any (ShadowSocks)
+        - IpProtocol: udp
+          FromPort: 8388
+          ToPort: 8388
+          CidrIp: 0.0.0.0/0
+          Description: From Any (ShadowSocks)
       SecurityGroupEgress:
-        - IpProtocol: tcp
-          FromPort: 22
-          ToPort: 22
+        - IpProtocol: -1
           CidrIp: 0.0.0.0/0
-          Description: To Any
-        - IpProtocol: tcp
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-          Description: To Any
-        - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
-          CidrIp: 0.0.0.0/0
-          Description: To Any
-        - IpProtocol: tcp
-          FromPort: 9418
-          ToPort: 9418
-          CidrIp: 0.0.0.0/0
-          Description: To Any (Git)
   BastionInstance:
     Type: AWS::EC2::Instance
     Properties:
@@ -527,11 +558,79 @@ Resources:
           # Set up Bastion (NAT) Instance
           echo net.ipv4.ip_forward=1 | sudo tee /etc/sysctl.d/98-nat-instance.conf
           sudo /sbin/iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-          sudo yum install -y iptables-services tmux
+          sudo yum install -y iptables-services
           sudo service iptables save
           sudo systemctl enable iptables
-          sudo curl -o /etc/tmux.conf https://raw.githubusercontent.com/bynnchapu/dotfiles/master/tmux.conf.dotfile
           sudo reboot
+  BastionInstanceRoute53Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !ImportValue Route53-AwsTenchoLabNetHostZoneId
+      Name: bastion.aws.tencho-lab.net
+      Type: A
+      TTL: 300
+      ResourceRecords:
+        - !GetAtt BastionInstance.PublicIp
+
+  #VPN Instance
+  VPNInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      GroupName: SG-VPN
+      GroupDescription: SG-VPN
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          SourcePrefixListId: !Ref ProtectedPrefixList
+          Description: From Protected (Any)
+        - IpProtocol: udp
+          FromPort: 51820
+          ToPort: 51820
+          CidrIp: 0.0.0.0/0
+          Description: From Any (Wireguard)
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0
+  VPNInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      AvailabilityZone: !Select [2, !GetAZs '']
+      IamInstanceProfile: !ImportValue IAM-Ec2ProfiletBastionInstance
+      ImageId: ami-08db3786368d759c1 # imagebuilder-miraclelinux8-2022-05-25T09-54-42.087Z
+      InstanceType: t3a.micro
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          AssociatePublicIpAddress: True
+          GroupSet:
+            - !Ref VPNInstanceSG
+          SubnetId: !Ref PublicSubnetDHCPD
+      Tags:
+        - Key: Name
+          Value: VPN
+      UserData: !Base64 |
+        #!/bin/bash -x
+        # Get Token for IMDSv2
+        TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+        # Get InstanceID
+        INSTANCE_ID=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/instance-id)
+        # Get Region
+        AWS_REGION=$(curl -H "X-aws-ec2-metadata-token: $TOKEN" -v http://169.254.169.254/latest/meta-data/placement/availability-zone | sed -e 's/.$//')
+        # Use only IMDSv2
+        aws ec2 modify-instance-metadata-options --instance-id $INSTANCE_ID --http-tokens required --http-endpoint enabled --region ${AWS_REGION}
+        # Configure Hostname
+        sudo hostnamectl set-hostname vpn.aws.tencho-lab.net
+        # Set up VPN Instance
+        echo net.ipv4.ip_forward=1 | sudo tee /etc/sysctl.d/98-vpn-instance.conf
+        sudo reboot
+  VPNInstanceRoute53Record:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !ImportValue Route53-AwsTenchoLabNetHostZoneId
+      Name: vpn.aws.tencho-lab.net
+      Type: A
+      TTL: 300
+      ResourceRecords:
+        - !GetAtt VPNInstance.PublicIp
 
 Outputs:
   VPCId:
