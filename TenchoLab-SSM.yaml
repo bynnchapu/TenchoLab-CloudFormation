@@ -226,6 +226,7 @@ Resources:
                   "  unzip -o $zip",
                   "done",
                   "PlaybookFile=\"{{PlaybookFile}}\"",
+                  "aws ssm get-parameters --names /Ansible/Vault --with-decryption --query Parameters[].Value --region ap-northeast-1 --output text > .ansible_vault",
                   "if [ ! -f  \"${PlaybookFile}\" ] ; then",
                   "   echo \"The specified Playbook file doesn't exist in the downloaded bundle. Please review the relative path and file name.\" >&2",
                   "   exit 2",
@@ -234,9 +235,9 @@ Resources:
                   "   ansible-galaxy install -r \"${RequirementsFile}\"",
                   "fi",
                   "if  [[ \"{{Check}}\" == True ]] ; then",
-                  "   ansible-playbook -i \"localhost,\" --check -c local -e \"{{ExtraVariables}}\" \"{{Verbose}}\" \"${PlaybookFile}\"",
+                  "   ansible-playbook -i \"localhost,\" --check -c local -e \"{{ExtraVariables}}\" --vault-password-file .ansible_vault \"{{Verbose}}\" \"${PlaybookFile}\"",
                   "else",
-                  "   ansible-playbook -i \"localhost,\" -c local -e \"{{ExtraVariables}}\" \"{{Verbose}}\" \"${PlaybookFile}\"",
+                  "   ansible-playbook -i \"localhost,\" -c local -e \"{{ExtraVariables}}\" --vault-password-file .ansible_vault \"{{Verbose}}\" \"${PlaybookFile}\"",
                   "fi"
                 ]
               }
