@@ -21,4 +21,4 @@ Outputs:
   CertificateArn:
     Value: !Ref ZabbixACM
     Export:
-      Name: System-Zabbix-ACMArn
+      Name: System-Zabbix-ACM-ELB

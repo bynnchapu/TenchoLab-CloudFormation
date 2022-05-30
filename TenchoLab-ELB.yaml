@@ -87,6 +87,7 @@ Resources:
       ListenerArn: !Ref TenchoLabELBHTTPSListner
       Certificates:
         - CertificateArn: !ImportValue System-Blog-ACM-ELB
+        - CertificateArn: !ImportValue System-Zabbix-ACM-ELB
 
   TenchoLabELBListnerRuleBlog:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
