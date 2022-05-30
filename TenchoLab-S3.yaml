@@ -1,42 +1,6 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
 Resources:
-  TenchoLabS3CfnPackage:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: tencho-lab-cfn-package
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - BucketKeyEnabled: True
-            ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: True
-        BlockPublicPolicy: True
-        IgnorePublicAcls: True 
-        RestrictPublicBuckets: True
-      LifecycleConfiguration:
-        Rules:
-          - Id: DeleteTemporaryTemplate
-            Status: Enabled
-            ExpirationInDays: 3
-  TenchoLabS3CfnPackageBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref TenchoLabS3CfnPackage
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
-            Effect: Deny
-            Principal: '*'
-            Action: 's3:*'
-            Resource:
-            - !GetAtt 'TenchoLabS3CfnPackage.Arn'
-            - !Sub '${TenchoLabS3CfnPackage.Arn}/*'
-            Condition:
-              Bool:
-                'aws:SecureTransport': false
   TenchoLabS3RainArtifact:
     Type: AWS::S3::Bucket
     Properties:
@@ -104,8 +68,51 @@ Resources:
             Condition:
               Bool:
                 'aws:SecureTransport': false
+  TenchoLabS3ELBLog:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub tencho-lab-elblog-${AWS::Region}
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: True
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True
+        RestrictPublicBuckets: True
+  TenchoLabS3ELBLogBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TenchoLabS3ELBLog
+      PolicyDocument:
+        Id: Allow-Put-ELB-logs
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
+            Effect: Deny
+            Principal: '*'
+            Action: s3:*
+            Resource:
+              - !GetAtt TenchoLabS3ELBLog.Arn
+              - !Sub '${TenchoLabS3ELBLog.Arn}/*'
+            Condition:
+              Bool:
+                aws:SecureTransport: false
+          - Sid: Stmt1429136633762
+            Action:
+              - s3:PutObject
+            Effect: Allow
+            Resource: !Sub ${TenchoLabS3ELBLog.Arn}/AWSLogs/${AWS::AccountId}/*
+            Principal:
+              AWS: arn:aws:iam::582318560864:root
 Outputs:
   TenchoLabS3GithubActionsArtifactArn:
     Value: !GetAtt TenchoLabS3GithubActionsArtifact.Arn
     Export:
       Name: S3-GithubActionsArtifactArn
+  TenchoLabS3ELBLog:
+    Value: !Ref TenchoLabS3ELBLog
+    Export:
+      Name: S3-ELBLog

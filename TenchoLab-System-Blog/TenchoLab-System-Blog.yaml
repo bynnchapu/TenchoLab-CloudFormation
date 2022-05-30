@@ -3,7 +3,7 @@ AWSTemplateFormatVersion: "2010-09-09"
 Parameters:
   ElbHostOriginFqdn:
     Type: String
-    Default: blog.origin.aws.tencho-lab.net
+    Default: origin.blog.aws.tencho-lab.net
   ElbHostProdFqdn:
     Type: String
     Default: blog.tencho-lab.net
@@ -31,13 +31,6 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: ./TenchoLab-System-Blog-ELB.yaml
-      Parameters:
-        ElbHostOriginFqdn: !Ref ElbHostOriginFqdn
-        #ElbHostProdFqdn: !Ref ElbHostProdFqdn
-        SystemName: !Ref SystemName
-        ACMELB: !GetAtt ACMStack.Outputs.CertificateArn
-        S3Name: !GetAtt S3Stack.Outputs.S3Name
-        SGELB: !GetAtt SGStack.Outputs.SGELB
   EFSStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -107,8 +100,8 @@ Resources:
       Parameters:
         ELBHostOriginFqdn: !Ref ElbHostOriginFqdn
         ELBHostProdFqdn: !Ref ElbHostProdFqdn
-        ELBDnsName: !GetAtt ELBStack.Outputs.ELBDNSName
-        ELBCanonicalHostedZoneID: !GetAtt ELBStack.Outputs.ELBCanonicalHostedZoneID
+        ELBDnsName: !ImportValue ELB-DNSName
+        ELBCanonicalHostedZoneID: !ImportValue ELB-CanonicalHostedZoneID
         CloudFrontDnsName: !GetAtt CloudFrontStack.Outputs.CloudFrontDnsName
   CloudFrontStack:
     Type: AWS::CloudFormation::Stack
@@ -117,7 +110,7 @@ Resources:
       Parameters:
         HostOriginFqdn: !Ref ElbHostOriginFqdn
         HostProdFqdn: !Ref ElbHostProdFqdn
-        PreSharedKey: !GetAtt ELBStack.Outputs.PreSharedKey
+        PreSharedKey: 2lv8anVLc
         SystemName: !Ref SystemName
         S3DomainName: !GetAtt S3Stack.Outputs.S3DomainName
         S3MediaDomainName: !GetAtt S3Stack.Outputs.S3MediaDomainName

@@ -27,3 +27,5 @@ Resources:
 Outputs:
   CertificateArn:
     Value: !Ref BlogACMELB
+    Export:
+      Name: System-Blog-ACM-ELB
