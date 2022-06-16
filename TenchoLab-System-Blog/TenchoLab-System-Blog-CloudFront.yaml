@@ -24,6 +24,7 @@ Resources:
       DistributionConfig:
         Comment: !Sub ${SystemName}
         Enabled: True
+        WebACLId: arn:aws:wafv2:us-east-1:499862365437:global/webacl/WebACL-Blog/50ade042-5d0b-46cd-8350-9a0e1cf84413
         Origins:
           - Id: ELB-Blog
             DomainName: !Ref HostOriginFqdn
@@ -104,6 +105,15 @@ Resources:
               - DELETE
             CachePolicyId: !Ref BlogCloudFrontCachePolicyWordpressDisabled
             OriginRequestPolicyId: !Ref BlogCloudFrontOriginRequestPolicyWordpressAdmin
+        CustomErrorResponses:
+          - ErrorCode: 404
+            ErrorCachingMinTTL: 10
+            ResponseCode: 404
+            ResponsePagePath: /404/not/found
+          - ErrorCode: 403
+            ErrorCachingMinTTL: 1200
+            ResponseCode: 404
+            ResponsePagePath: /404/not/found
         HttpVersion: http2
         Aliases:
           - !Ref HostProdFqdn

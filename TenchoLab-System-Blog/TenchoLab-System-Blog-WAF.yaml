@@ -1,0 +1,47 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  BlogWAF:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: WebACL-Blog
+      Scope: CLOUDFRONT
+      DefaultAction:
+        Allow: {}
+      Rules:
+        - Name: Rule-BlockLoginPage
+          Priority: 0
+          Action:
+            Block: {}
+          Statement:
+            RegexMatchStatement:
+              FieldToMatch:
+                UriPath: {}
+              RegexString: '\/wp-login.php$'
+              TextTransformations:
+                - Priority: 0
+                  Type: LOWERCASE
+          VisibilityConfig:
+            SampledRequestsEnabled: True
+            CloudWatchMetricsEnabled: True
+            MetricName: Rule-BlockLoginPage
+        - Name: Rule-BlockAdminPage
+          Priority: 1
+          Action:
+            Block: {}
+          Statement:
+            RegexMatchStatement:
+              FieldToMatch:
+                UriPath: {}
+              RegexString: '\/+wp-admin\/?(.*)$'
+              TextTransformations:
+                - Priority: 0
+                  Type: LOWERCASE
+          VisibilityConfig:
+            SampledRequestsEnabled: True
+            CloudWatchMetricsEnabled: True
+            MetricName: Rule-BlockAdminPage
+      VisibilityConfig:
+        SampledRequestsEnabled: True
+        CloudWatchMetricsEnabled: True
+        MetricName: WebACL-Blog
