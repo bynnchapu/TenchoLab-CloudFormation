@@ -1,0 +1,17 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  CloudMapNameSpace:
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+    Properties:
+      Vpc: !ImportValue VPC-Id
+      Name: aws.tencho-lab.net
+      Properties:
+        DnsProperties:
+          SOA:
+            TTL: 600
+Outputs:
+  CloudMapNameSpaceId:
+    Value: !GetAtt CloudMapNameSpace.Id
+    Export:
+      Name: CloudMap-NameSpaceId

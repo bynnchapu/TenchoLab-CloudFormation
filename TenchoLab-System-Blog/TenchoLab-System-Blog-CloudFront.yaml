@@ -116,6 +116,38 @@ Resources:
         Logging:
           Bucket: !Ref S3DomainName
           Prefix: CloudFront
+  BlogImgCloudFront:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Comment: !Sub ${SystemName}-IMG
+        Enabled: True
+        Origins:
+          - Id: S3-Media
+            DomainName: !Ref S3MediaDomainName
+            S3OriginConfig:
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${BlogCloudFrontOriginAccessIdentityMedia}
+        DefaultCacheBehavior:
+          TargetOriginId: S3-Media
+          Compress: True
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachePolicyId: !Ref BlogCloudFrontCachePolicyWordpressMedia
+          OriginRequestPolicyId: !Ref BlogCloudFrontOriginRequestPolicyWordpressMedia
+        HttpVersion: http2
+        Aliases:
+          - !Sub img.${HostProdFqdn}
+        PriceClass: PriceClass_All
+        IPV6Enabled: True
+        ViewerCertificate:
+          AcmCertificateArn: arn:aws:acm:us-east-1:499862365437:certificate/21d4e63a-66d2-4c5c-b1fa-faa2de92c6fa
+          MinimumProtocolVersion: TLSv1.2_2021
+          SslSupportMethod: sni-only
+        Logging:
+          Bucket: !Ref S3DomainName
+          Prefix: CloudFront
 
   BlogCloudFrontOriginAccessIdentityMedia:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
@@ -250,3 +282,5 @@ Resources:
 Outputs:
   CloudFrontDnsName:
     Value: !GetAtt BlogCloudFront.DomainName
+  CloudFrontImgDnsName:
+    Value: !GetAtt BlogImgCloudFront.DomainName

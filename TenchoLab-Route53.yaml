@@ -16,6 +16,13 @@ Resources:
     Type: AWS::Route53::HostedZone
     Properties:
       Name: !Ref TenchoLabNetHostName
+  TenchoLabNetPrivateHostZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: !Ref TenchoLabNetHostName
+      VPCs:
+        - VPCId: !ImportValue VPC-Id
+          VPCRegion: ap-northeast-1
   AwsTenchoLabNetHostZone:
     Type: AWS::Route53::HostedZone
     Properties:
@@ -30,6 +37,10 @@ Outputs:
     Value: !Ref TenchoLabNetHostZone
     Export:
       Name: Route53-TenchoLabNetHostZoneId
+  TenchoLabNetPrivateHostZoneId:
+    Value: !Ref TenchoLabNetPrivateHostZone
+    Export:
+      Name: Route53-TenchoLabNetPrivateHostZoneId
   AwsTenchoLabNetHostZoneId:
     Value: !Ref AwsTenchoLabNetHostZone
     Export:

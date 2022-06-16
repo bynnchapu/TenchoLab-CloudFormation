@@ -571,6 +571,22 @@ Resources:
       TTL: 300
       ResourceRecords:
         - !GetAtt BastionInstance.PublicIp
+  BastionInstanceCloudMapService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: bastion
+      DnsConfig:
+        DnsRecords:
+          - Type: A
+            TTL: 60
+        NamespaceId: !ImportValue CloudMap-NameSpaceId
+  BastionInstanceCloudMapAssociation:
+    Type: AWS::ServiceDiscovery::Instance
+    Properties:
+      InstanceAttributes:
+        AWS_INSTANCE_IPV4: !GetAtt BastionInstance.PrivateIp
+      InstanceId: !Ref BastionInstance
+      ServiceId: !Ref BastionInstanceCloudMapService
 
   #VPN Instance
   VPNInstanceSG:
@@ -631,12 +647,32 @@ Resources:
       TTL: 300
       ResourceRecords:
         - !GetAtt VPNInstance.PublicIp
+  VPNInstanceCloudMapService:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: vpn
+      DnsConfig:
+        DnsRecords:
+          - Type: A
+            TTL: 60
+        NamespaceId: !ImportValue CloudMap-NameSpaceId
+  VPNInstanceCloudMapAssociation:
+    Type: AWS::ServiceDiscovery::Instance
+    Properties:
+      InstanceAttributes:
+        AWS_INSTANCE_IPV4: !GetAtt VPNInstance.PrivateIp
+      InstanceId: !Ref VPNInstance
+      ServiceId: !Ref VPNInstanceCloudMapService
 
 Outputs:
   VPCId:
     Value: !Ref TenchoLabVPC
     Export:
       Name: VPC-Id
+  VPCCidr:
+    Value: !Ref VpcCidr
+    Export:
+      Name: VPC-Cidr
   PublicSubnetIdFixA:
     Value: !Ref PublicSubnetFixA
     Export:
@@ -709,3 +745,11 @@ Outputs:
     Value: !Ref PrivateSubnetDHCPD
     Export:
       Name: VPC-PrivateSubnetIdDHCPD
+  VPNInstancePrivateIpWithCidr:
+    Value: !Sub ${VPNInstance.PrivateIp}/32
+    Export:
+      Name: VPC-VPNInstancePrivateIpWithCidr
+  BastionInstancePrivateIpWithCidr:
+    Value: !Sub ${BastionInstance.PrivateIp}/32
+    Export:
+      Name: VPC-BastionInstancePrivateIpWithCidr

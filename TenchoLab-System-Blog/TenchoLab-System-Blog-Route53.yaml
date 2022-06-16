@@ -11,6 +11,8 @@ Parameters:
     Type: String
   CloudFrontDnsName:
     Type: String
+  CloudFrontImgDnsName:
+    Type: String
 Resources:
   BlogRoute53OriginHost:
     Type: AWS::Route53::RecordSet
@@ -22,6 +24,7 @@ Resources:
         DNSName: !Ref ELBDnsName
         HostedZoneId: !Ref ELBCanonicalHostedZoneID
 
+  # blog.tencho-lab.net from PrivateZone is Associated by other stack ?(maybe)
   BlogRoute53ProdHost:
     Type: AWS::Route53::RecordSet
     Properties:
@@ -39,4 +42,22 @@ Resources:
       HostedZoneId: !ImportValue Route53-TenchoLabNetHostZoneId
       AliasTarget:
         DNSName: !Ref CloudFrontDnsName
+        HostedZoneId: Z2FDTNDATAQYW2
+  BlogImgRoute53ProdHost:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: A
+      Name: !Sub img.${ELBHostProdFqdn}
+      HostedZoneId: !ImportValue Route53-TenchoLabNetHostZoneId
+      AliasTarget:
+        DNSName: !Ref CloudFrontImgDnsName
+        HostedZoneId: Z2FDTNDATAQYW2
+  BlogImgRoute53ProdHostAAAA:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: AAAA
+      Name: !Sub img.${ELBHostProdFqdn}
+      HostedZoneId: !ImportValue Route53-TenchoLabNetHostZoneId
+      AliasTarget:
+        DNSName: !Ref CloudFrontImgDnsName
         HostedZoneId: Z2FDTNDATAQYW2

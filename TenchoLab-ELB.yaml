@@ -54,6 +54,25 @@ Resources:
         - Key: deletion_protection.enabled
           Value: false
   
+  TenchoLabELBCloudMapServiceZabbix:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: zabbix
+      DnsConfig:
+        DnsRecords:
+          - Type: A
+            TTL: 60
+        NamespaceId: !ImportValue CloudMap-NameSpaceId
+  TenchoLabELBCloudMapServiceOriginBlog:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: origin.blog
+      DnsConfig:
+        DnsRecords:
+          - Type: A
+            TTL: 60
+        NamespaceId: !ImportValue CloudMap-NameSpaceId
+
   TenchoLabELBHTTPListner:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties:
@@ -110,6 +129,25 @@ Resources:
             HttpHeaderName: X-Pre-Shared-Key
             Values:
               - !Ref BlogPreSharedKey
+  TenchoLabELBListnerRuleBlogLocal:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref TenchoLabELBHTTPSListner
+      Priority: 2
+      Actions:
+        - Type: forward
+          ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !ImportValue System-Blog-ELB-TargetGroup
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - blog.tencho-lab.net
+        - Field: source-ip
+          SourceIpConfig:
+            Values:
+              - !ImportValue VPC-Cidr
 Outputs:
   TenchoLabELBSG:
     Value: !Ref TenchoLabSGELB

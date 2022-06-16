@@ -103,6 +103,7 @@ Resources:
         ELBDnsName: !ImportValue ELB-DNSName
         ELBCanonicalHostedZoneID: !ImportValue ELB-CanonicalHostedZoneID
         CloudFrontDnsName: !GetAtt CloudFrontStack.Outputs.CloudFrontDnsName
+        CloudFrontImgDnsName: !GetAtt CloudFrontStack.Outputs.CloudFrontImgDnsName
   CloudFrontStack:
     Type: AWS::CloudFormation::Stack
     Properties:
