@@ -352,22 +352,15 @@ Resources:
       VpcId: !Ref TenchoLabVPC
       GroupName: SG-Default-Protected
       GroupDescription: SG-Default-Protected
-  ProtectedSubnetDefaultSGIngressSSH:
+  ProtectedSubnetDefaultSGIngressZabbix:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref ProtectedSubnetDefaultSG
       IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      SourceSecurityGroupId: !Ref VPNInstanceSG
-  ProtectedSubnetDefaultSGIngressRDP:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref ProtectedSubnetDefaultSG
-      IpProtocol: tcp
-      FromPort: 3389
-      ToPort: 3389
-      SourceSecurityGroupId: !Ref VPNInstanceSG
+      FromPort: 10050
+      ToPort: 10050
+      SourceSecurityGroupId: !ImportValue Zabbix-SGECS
+      Description: From Zabbix
 
   # Private Subnet
   PrivateSubnetFixA:
@@ -479,22 +472,15 @@ Resources:
       VpcId: !Ref TenchoLabVPC
       GroupName: SG-Default-Private
       GroupDescription: SG-Default-Private
-  PrivateSubnetDefaultSGIngressSSH:
+  PrivateSubnetDefaultSGIngressZabbix:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
       GroupId: !Ref PrivateSubnetDefaultSG
       IpProtocol: tcp
-      FromPort: 22
-      ToPort: 22
-      SourceSecurityGroupId: !Ref VPNInstanceSG
-  PrivateSubnetDefaultSGIngressRDP:
-    Type: AWS::EC2::SecurityGroupIngress
-    Properties:
-      GroupId: !Ref PrivateSubnetDefaultSG
-      IpProtocol: tcp
-      FromPort: 3389
-      ToPort: 3389
-      SourceSecurityGroupId: !Ref VPNInstanceSG
+      FromPort: 10050
+      ToPort: 10050
+      SourceSecurityGroupId: !ImportValue Zabbix-SGECS
+      Description: From Zabbix
 
   #Bastion Instance
   BastionInstanceSG:
@@ -517,6 +503,11 @@ Resources:
           ToPort: 8388
           CidrIp: 0.0.0.0/0
           Description: From Any (ShadowSocks)
+        - IpProtocol: tcp
+          FromPort: 10050
+          ToPort: 10050
+          SourceSecurityGroupId: !ImportValue Zabbix-SGECS
+          Description: From Zabbix
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
@@ -604,6 +595,11 @@ Resources:
           ToPort: 51820
           CidrIp: 0.0.0.0/0
           Description: From Any (Wireguard)
+        - IpProtocol: tcp
+          FromPort: 10050
+          ToPort: 10050
+          SourceSecurityGroupId: !ImportValue Zabbix-SGECS
+          Description: From Zabbix
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0

@@ -93,6 +93,10 @@ Resources:
           FromPort: 3306
           ToPort: 3306
           SourceSecurityGroupId: !ImportValue Blog-SGECS
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !ImportValue Zabbix-SGECS
 
   RDSLogsAudit:
     Type: AWS::Logs::LogGroup

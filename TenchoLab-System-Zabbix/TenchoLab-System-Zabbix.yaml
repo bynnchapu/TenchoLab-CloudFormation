@@ -15,3 +15,43 @@ Resources:
       Parameters:
         SystemName: !Ref SystemName
         FQDN: !Ref FQDN
+  IAMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Zabbix-IAM.yaml
+      Parameters:
+        SystemName: !Ref SystemName
+  LogsStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Zabbix-Logs.yaml
+      Parameters:
+        SystemName: !Ref SystemName
+  SGStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Zabbix-SG.yaml
+  ELBStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Zabbix-ELB.yaml
+  ECRStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Zabbix-ECR.yaml
+  ECSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: ./TenchoLab-System-Zabbix-ECS.yaml
+      Parameters:
+        SystemName: !Ref SystemName
+        SGECS: !GetAtt SGStack.Outputs.SGECS
+        ELBTargetGroupArn: !GetAtt ELBStack.Outputs.ELBTargetGroupArn
+        ECSTaskExecutionRole: !GetAtt IAMStack.Outputs.ECSTaskExecutionRole
+        ECSTaskRoleArn: !GetAtt IAMStack.Outputs.ECSZabbixTaskRole
+        LogsServer: !GetAtt LogsStack.Outputs.LogsServer
+        LogsWeb: !GetAtt LogsStack.Outputs.LogsWeb
+        LogsAgent: !GetAtt LogsStack.Outputs.LogsAgent
+        ECRZabbixServerRepositoryUri: !GetAtt ECRStack.Outputs.ECRServerUri
+        ECRZabbixWebRepositoryUri: !GetAtt ECRStack.Outputs.ECRWebUri
+        ECRZabbixAgentRepositoryUri: !GetAtt ECRStack.Outputs.ECRAgentUri

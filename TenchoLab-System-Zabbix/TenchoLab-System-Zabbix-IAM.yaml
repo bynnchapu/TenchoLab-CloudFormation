@@ -1,0 +1,73 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  SystemName:
+    Type: String
+Resources:
+  ZabbixIAMECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${SystemName}ECSTaskExecutionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: AllowGetSecret
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: AllowGetParameter
+                Effect: Allow
+                Action:
+                  - ssm:GetParameters
+                Resource:
+                  - "arn:aws:ssm:ap-northeast-1:499862365437:parameter/System/Zabbix/*"
+                  - "arn:aws:ssm:ap-northeast-1:499862365437:parameter/RDS/*"
+              - Sid: AllowDecryptSSMKey
+                Effect: Allow
+                Action:
+                  - kms:Decrypt
+                Resource:
+                  # Managed key alias of alias/aws/ssm
+                  - 'arn:aws:kms:ap-northeast-1:499862365437:key/0e99ac32-deea-4bae-adf5-7744cc3ac3bb'
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+  ZabbixIAMECSServerTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${SystemName}ECSServerTaskRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: AllowExecBySSM
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: AllowGetParameter
+                Effect: Allow
+                Action:
+                  - ssmmessages:CreateControlChannel
+                  - ssmmessages:CreateDataChannel
+                  - ssmmessages:OpenControlChannel
+                  - ssmmessages:OpenDataChannel
+                Resource: "*"
+Outputs:
+  ECSTaskExecutionRole:
+    Value: !Ref ZabbixIAMECSTaskExecutionRole
+  ECSZabbixTaskRole:
+    Value: !Ref ZabbixIAMECSServerTaskRole

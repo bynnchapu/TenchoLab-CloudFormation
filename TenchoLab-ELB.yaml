@@ -148,6 +148,25 @@ Resources:
           SourceIpConfig:
             Values:
               - !ImportValue VPC-Cidr
+  TenchoLabELBListnerRuleZabbix:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      ListenerArn: !Ref TenchoLabELBHTTPSListner
+      Priority: 3
+      Actions:
+        - Type: forward
+          ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn: !ImportValue System-Zabbix-ELB-TargetGroup
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - zabbix.aws.tencho-lab.net
+        - Field: source-ip
+          SourceIpConfig:
+            Values:
+              - !ImportValue VPC-Cidr
 Outputs:
   TenchoLabELBSG:
     Value: !Ref TenchoLabSGELB

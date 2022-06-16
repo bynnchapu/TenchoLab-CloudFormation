@@ -1,0 +1,20 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  ZabbixELBTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: Zabbix-Server
+      VpcId: !ImportValue VPC-Id
+      Protocol: HTTP
+      Port: 80
+      TargetType: ip
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 15
+      HealthCheckPath: /
+Outputs:
+  ELBTargetGroupArn:
+    Value: !Ref ZabbixELBTargetGroup
+    Export:
+      Name: System-Zabbix-ELB-TargetGroup

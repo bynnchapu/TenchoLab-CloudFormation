@@ -1,0 +1,88 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  ZabbixECRServer:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: zabbix/server
+      ImageScanningConfiguration:
+        ScanOnPush: True
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Delete unncessary images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 2
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+  ZabbixECRWeb:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: zabbix/web
+      ImageScanningConfiguration:
+        ScanOnPush: True
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Delete unncessary images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 2
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+  ZabbixECRAgent:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: zabbix/agent
+      ImageScanningConfiguration:
+        ScanOnPush: True
+      LifecyclePolicy:
+        LifecyclePolicyText: |
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Delete unncessary images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 2
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+Outputs: 
+  ECRServerName:
+    Value: !Ref ZabbixECRServer
+  ECRServerUri:
+    Value: !GetAtt ZabbixECRServer.RepositoryUri
+  ECRWebName:
+    Value: !Ref ZabbixECRWeb
+  ECRWebUri:
+    Value: !GetAtt ZabbixECRWeb.RepositoryUri
+  ECRAgentName:
+    Value: !Ref ZabbixECRAgent
+  ECRAgentUri:
+    Value: !GetAtt ZabbixECRAgent.RepositoryUri

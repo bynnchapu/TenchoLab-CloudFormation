@@ -1,0 +1,28 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  SystemName:
+    Type: String
+Resources:
+  ZabbixLogsServer:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /System/${SystemName}/Server
+      RetentionInDays: 365
+  ZabbixLogsWeb:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /System/${SystemName}/Web
+      RetentionInDays: 365
+  ZabbixLogsAgent:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /System/${SystemName}/Agent
+      RetentionInDays: 365
+Outputs:
+  LogsServer:
+    Value: !Ref ZabbixLogsServer
+  LogsWeb:
+    Value: !Ref ZabbixLogsWeb
+  LogsAgent:
+    Value: !Ref ZabbixLogsAgent

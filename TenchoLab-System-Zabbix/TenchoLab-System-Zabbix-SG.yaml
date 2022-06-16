@@ -1,0 +1,19 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Resources:
+  ZabbixSGECS:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: SG-Zabbix-ECS
+      GroupDescription: SG-Zabbix-ECS
+      VpcId: !ImportValue VPC-Id
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          SourceSecurityGroupId: !ImportValue ELB-DefaultSG
+Outputs:
+  SGECS:
+    Value: !Ref ZabbixSGECS
+    Export:
+      Name: Zabbix-SGECS
