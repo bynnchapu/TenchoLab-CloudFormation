@@ -62,9 +62,6 @@ Resources:
     Properties:
       Description: TenchoLabDB-MySQL8.0
       Family: mysql8.0
-      Tags:
-        - Key: Name
-          Value: tencholab-db.mysql80
       Parameters:
         character_set_client: utf8mb4
         character_set_server: utf8mb4
