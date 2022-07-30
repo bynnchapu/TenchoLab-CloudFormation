@@ -78,6 +78,11 @@ Resources:
       MajorEngineVersion: 8.0
       OptionConfigurations:
         - OptionName: MARIADB_AUDIT_PLUGIN
+          OptionSettings:
+            - Name: SERVER_AUDIT_EVENTS
+              Value: CONNECT
+            - Name: SERVER_AUDIT_EXCL_USERS
+              Value: rdsadmin,wordpress,zabbix
 
   RDSSG:
     Type: AWS::EC2::SecurityGroup
