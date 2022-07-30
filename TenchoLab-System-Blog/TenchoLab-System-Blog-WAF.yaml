@@ -9,38 +9,31 @@ Resources:
       DefaultAction:
         Allow: {}
       Rules:
-        - Name: Rule-BlockLoginPage
+        - Name: Rule-BlockLoginAndAdminPage
           Priority: 0
           Action:
             Block: {}
           Statement:
-            RegexMatchStatement:
-              FieldToMatch:
-                UriPath: {}
-              RegexString: '\/wp-login.php$'
-              TextTransformations:
-                - Priority: 0
-                  Type: LOWERCASE
+            OrStatement:
+              Statements:
+                - RegexMatchStatement:
+                    FieldToMatch:
+                      UriPath: {}
+                    RegexString: '\/wp-login.php$'
+                    TextTransformations:
+                      - Priority: 0
+                        Type: LOWERCASE
+                - RegexMatchStatement:
+                    FieldToMatch:
+                      UriPath: {}
+                    RegexString: '\/+wp-admin\/?(.*)$'
+                    TextTransformations:
+                      - Priority: 0
+                        Type: LOWERCASE
           VisibilityConfig:
             SampledRequestsEnabled: True
             CloudWatchMetricsEnabled: True
-            MetricName: Rule-BlockLoginPage
-        - Name: Rule-BlockAdminPage
-          Priority: 1
-          Action:
-            Block: {}
-          Statement:
-            RegexMatchStatement:
-              FieldToMatch:
-                UriPath: {}
-              RegexString: '\/+wp-admin\/?(.*)$'
-              TextTransformations:
-                - Priority: 0
-                  Type: LOWERCASE
-          VisibilityConfig:
-            SampledRequestsEnabled: True
-            CloudWatchMetricsEnabled: True
-            MetricName: Rule-BlockAdminPage
+            MetricName: Rule-BlockLoginAndAdminPage
       VisibilityConfig:
         SampledRequestsEnabled: True
         CloudWatchMetricsEnabled: True
