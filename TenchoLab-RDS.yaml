@@ -31,7 +31,7 @@ Resources:
       DBInstanceIdentifier: !Ref DBName
       DBInstanceClass: db.t4g.micro
       Engine: mysql
-      EngineVersion: 8.0.27
+      EngineVersion: 8.0.29
       DBParameterGroupName: !Ref RDSParameterGroup
       OptionGroupName: !Ref RDSOptionGroup
       DBSubnetGroupName: !Ref RDSDBSubnetGroup
