@@ -12,6 +12,10 @@ Resources:
           FromPort: 8080
           ToPort: 8080
           SourceSecurityGroupId: !ImportValue ELB-DefaultSG
+        - IpProtocol: tcp
+          FromPort: 10051
+          ToPort: 10051
+          SourceSecurityGroupId: !ImportValue Lambda-Send-Value-to-Zabbix-SG
 Outputs:
   SGECS:
     Value: !Ref ZabbixSGECS
