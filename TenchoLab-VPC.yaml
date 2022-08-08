@@ -511,6 +511,10 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
+  BastionEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref BastionInstance
   BastionInstance:
     Type: AWS::EC2::Instance
     Properties:
@@ -603,6 +607,10 @@ Resources:
       SecurityGroupEgress:
         - IpProtocol: -1
           CidrIp: 0.0.0.0/0
+  VPNEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      InstanceId: !Ref VPNInstance
   VPNInstance:
     Type: AWS::EC2::Instance
     Properties:
