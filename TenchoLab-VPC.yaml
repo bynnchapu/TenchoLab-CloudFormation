@@ -7,60 +7,6 @@ Parameters:
   VpcCidr:
     Type: String
     Default: "10.102.0.0/16"
-  PublicSubnetFixCidrA:
-    Type: String
-    Default: "10.102.1.0/25"
-  PublicSubnetDHCPCidrA:
-    Type: String
-    Default: "10.102.1.128/25"
-  PublicSubnetFixCidrC:
-    Type: String
-    Default: "10.102.3.0/25"
-  PublicSubnetDHCPCidrC:
-    Type: String
-    Default: "10.102.3.128/25"
-  PublicSubnetFixCidrD:
-    Type: String
-    Default: "10.102.4.0/25"
-  PublicSubnetDHCPCidrD:
-    Type: String
-    Default: "10.102.4.128/25"
-  ProtectedSubnetFixCidrA:
-    Type: String
-    Default: "10.102.11.0/25"
-  ProtectedSubnetDHCPCidrA:
-    Type: String
-    Default: "10.102.11.128/25"
-  ProtectedSubnetFixCidrC:
-    Type: String
-    Default: "10.102.13.0/25"
-  ProtectedSubnetDHCPCidrC:
-    Type: String
-    Default: "10.102.13.128/25"
-  ProtectedSubnetFixCidrD:
-    Type: String
-    Default: "10.102.14.0/25"
-  ProtectedSubnetDHCPCidrD:
-    Type: String
-    Default: "10.102.14.128/25"
-  PrivateSubnetFixCidrA:
-    Type: String
-    Default: "10.102.21.0/25"
-  PrivateSubnetDHCPCidrA:
-    Type: String
-    Default: "10.102.21.128/25"
-  PrivateSubnetFixCidrC:
-    Type: String
-    Default: "10.102.23.0/25"
-  PrivateSubnetDHCPCidrC:
-    Type: String
-    Default: "10.102.23.128/25"
-  PrivateSubnetFixCidrD:
-    Type: String
-    Default: "10.102.24.0/25"
-  PrivateSubnetDHCPCidrD:
-    Type: String
-    Default: "10.102.24.128/25"
   PeerVPCIdUsWest2:
     Type: String
   PeerVPCCidrUsWest2:
@@ -122,7 +68,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      CidrBlock: !Ref PublicSubnetFixCidrA
+      CidrBlock: !Select [ 2, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -132,7 +78,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      CidrBlock: !Ref PublicSubnetDHCPCidrA
+      CidrBlock: !Select [ 3, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -142,7 +88,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 1, !GetAZs '' ]
-      CidrBlock: !Ref PublicSubnetFixCidrC
+      CidrBlock: !Select [ 6, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -152,7 +98,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 1, !GetAZs '' ]
-      CidrBlock: !Ref PublicSubnetDHCPCidrC
+      CidrBlock: !Select [ 7, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -162,7 +108,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 2, !GetAZs '' ]
-      CidrBlock: !Ref PublicSubnetFixCidrD
+      CidrBlock: !Select [ 8, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -172,7 +118,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 2, !GetAZs '' ]
-      CidrBlock: !Ref PublicSubnetDHCPCidrD
+      CidrBlock: !Select [ 9, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -240,7 +186,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      CidrBlock: !Ref ProtectedSubnetFixCidrA
+      CidrBlock: !Select [ 22, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -250,7 +196,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      CidrBlock: !Ref ProtectedSubnetDHCPCidrA
+      CidrBlock: !Select [ 23, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -260,7 +206,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 1, !GetAZs '' ]
-      CidrBlock: !Ref ProtectedSubnetFixCidrC
+      CidrBlock: !Select [ 26, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -270,7 +216,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 1, !GetAZs '' ]
-      CidrBlock: !Ref ProtectedSubnetDHCPCidrC
+      CidrBlock: !Select [ 27, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -280,7 +226,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 2, !GetAZs '' ]
-      CidrBlock: !Ref ProtectedSubnetFixCidrD
+      CidrBlock: !Select [ 28, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -290,7 +236,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 2, !GetAZs '' ]
-      CidrBlock: !Ref ProtectedSubnetDHCPCidrD
+      CidrBlock: !Select [ 29, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -302,17 +248,17 @@ Resources:
       AddressFamily: IPv4
       MaxEntries: 10
       Entries:
-        - Cidr: !Ref ProtectedSubnetFixCidrA
+        - Cidr: !Select [ 22, !Cidr [ !Ref VpcCidr, 60, 7]]
           Description: !Sub ${EnvironmentName}-Protected-Fix-A
-        - Cidr: !Ref ProtectedSubnetDHCPCidrA
+        - Cidr: !Select [ 23, !Cidr [ !Ref VpcCidr, 60, 7]]
           Description: !Sub ${EnvironmentName}-Protected-DHCP-A
-        - Cidr: !Ref ProtectedSubnetFixCidrC
+        - Cidr: !Select [ 26, !Cidr [ !Ref VpcCidr, 60, 7]]
           Description: !Sub ${EnvironmentName}-Protected-Fix-C
-        - Cidr: !Ref ProtectedSubnetDHCPCidrC
+        - Cidr: !Select [ 27, !Cidr [ !Ref VpcCidr, 60, 7]]
           Description: !Sub ${EnvironmentName}-Protected-DHCP-C
-        - Cidr: !Ref ProtectedSubnetFixCidrD
+        - Cidr: !Select [ 28, !Cidr [ !Ref VpcCidr, 60, 7]]
           Description: !Sub ${EnvironmentName}-Protected-Fix-D
-        - Cidr: !Ref ProtectedSubnetDHCPCidrD
+        - Cidr: !Select [ 29, !Cidr [ !Ref VpcCidr, 60, 7]]
           Description: !Sub ${EnvironmentName}-Protected-DHCP-D
   ProtectedRouteTable:
     Type: AWS::EC2::RouteTable
@@ -391,7 +337,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      CidrBlock: !Ref PrivateSubnetFixCidrA
+      CidrBlock: !Select [ 42, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -401,7 +347,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 0, !GetAZs '' ]
-      CidrBlock: !Ref PrivateSubnetDHCPCidrA
+      CidrBlock: !Select [ 43, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -411,7 +357,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 1, !GetAZs '' ]
-      CidrBlock: !Ref PrivateSubnetFixCidrC
+      CidrBlock: !Select [ 46, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -421,7 +367,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 1, !GetAZs '' ]
-      CidrBlock: !Ref PrivateSubnetDHCPCidrC
+      CidrBlock: !Select [ 47, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -431,7 +377,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 2, !GetAZs '' ]
-      CidrBlock: !Ref PrivateSubnetFixCidrD
+      CidrBlock: !Select [ 48, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
@@ -441,7 +387,7 @@ Resources:
     Properties:
       VpcId: !Ref TenchoLabVPC
       AvailabilityZone: !Select [ 2, !GetAZs '' ]
-      CidrBlock: !Ref PrivateSubnetDHCPCidrD
+      CidrBlock: !Select [ 49, !Cidr [ !Ref VpcCidr, 60, 7]]
       MapPublicIpOnLaunch: False
       Tags:
         - Key: Name
