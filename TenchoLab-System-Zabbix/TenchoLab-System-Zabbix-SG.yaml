@@ -16,6 +16,12 @@ Resources:
           FromPort: 10051
           ToPort: 10051
           SourceSecurityGroupId: !ImportValue Lambda-Send-Value-to-Zabbix-SG
+  ZabbixSGECSIngressSelf:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      GroupId: !Ref ZabbixSGECS
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref ZabbixSGECS
 Outputs:
   SGECS:
     Value: !Ref ZabbixSGECS
