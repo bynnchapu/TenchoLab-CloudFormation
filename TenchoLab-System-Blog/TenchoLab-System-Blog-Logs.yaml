@@ -4,18 +4,11 @@ Parameters:
   SystemName:
     Type: String
 Resources:
-  BlogLogsMySQL:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub /System/${SystemName}/MySQL
-      RetentionInDays: 365
   BlogLogsWordpress:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: !Sub /System/${SystemName}/Wordpress
       RetentionInDays: 365
 Outputs:
-  LogsMySQL:
-    Value: !Ref BlogLogsMySQL
   LogsWordpress:
     Value: !Ref BlogLogsWordpress
