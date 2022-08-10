@@ -61,6 +61,10 @@ Parameters:
   PrivateSubnetDHCPCidrD:
     Type: String
     Default: "10.102.24.128/25"
+  PeerVPCIdUsWest2:
+    Type: String
+  PeerVPCCidrUsWest2:
+    Type: String
 Resources:
   # VPC
   TenchoLabVPC:
@@ -81,6 +85,13 @@ Resources:
       LogDestinationType: s3
       MaxAggregationInterval: 60
       LogDestination: !ImportValue Security-S3Arn
+  # VPC Peering for us-west-2
+  VPCPeerUsWest2:
+    Type: AWS::EC2::VPCPeeringConnection
+    Properties:
+      PeerRegion: us-west-2
+      PeerVpcId: !Ref PeerVPCIdUsWest2
+      VpcId: !Ref TenchoLabVPC
   # InternetGateway
   InternetGW:
     Type: AWS::EC2::InternetGateway
@@ -186,6 +197,12 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
       DestinationCidrBlock: 172.24.0.0/24
       InstanceId: !Ref VPNInstance
+  PublicUsWest2Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: !Ref PeerVPCCidrUsWest2
+      VpcPeeringConnectionId: !Ref VPCPeerUsWest2
   PublicSubnetFixARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -316,6 +333,12 @@ Resources:
       RouteTableId: !Ref ProtectedRouteTable
       DestinationCidrBlock: 172.24.0.0/24
       InstanceId: !Ref VPNInstance
+  ProtectedUsWest2Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref ProtectedRouteTable
+      DestinationCidrBlock: !Ref PeerVPCCidrUsWest2
+      VpcPeeringConnectionId: !Ref VPCPeerUsWest2
   ProtectedSubnetFixARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -436,6 +459,12 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
       DestinationCidrBlock: 172.24.0.0/24
       InstanceId: !Ref VPNInstance
+  PrivateUsWest2Route:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: !Ref PeerVPCCidrUsWest2
+      VpcPeeringConnectionId: !Ref VPCPeerUsWest2
   PrivateSubnetFixARouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
