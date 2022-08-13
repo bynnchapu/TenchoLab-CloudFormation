@@ -196,6 +196,12 @@ Resources:
     Properties:
       RouteTableId: !Ref PublicRouteTable
       SubnetId: !Ref PublicSubnetDHCPD
+  PublicSubnetDefaultSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref TenchoLabVPC
+      GroupName: SG-Default-Public
+      GroupDescription: SG-Default-Public
 
   # Protected Subnet
   ProtectedSubnetFixA:
