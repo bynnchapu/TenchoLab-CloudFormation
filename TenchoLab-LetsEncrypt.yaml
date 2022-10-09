@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+Resources:
+  AcmeCertUpdaterCore:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:445285296882:applications/acme-cert-updater
+        SemanticVersion: 1.4.0
+      Parameters:
+        # S3 bucket name for saving the certificates (required)
+        BucketName: !Ref TenchoLabS3LetsEncryptCert
+        # Comma separated list of domains to update the certificates (required)
+        Domains: core.tencho-lab.net
+        # Email address (required)
+        Email: bynn_chapu@tencho-lab.net
+        # Amazon Route 53 Hosted Zone ID (required)
+        HostedZone: !ImportValue Route53-TenchoLabNetHostZoneId
+        # url for acme server
+        # default: https://acme-v02.api.letsencrypt.org/directory
+        AcmeServer: https://acme-v02.api.letsencrypt.org/directory
+        # execution environment
+        # allowed values: production, staging
+        # default: production
+        Environment: production
+        # Prefix of objects on S3 bucket.
+        # default: "" (no prefix)
+        Prefix: ""
+        # Log level
+        # allowed values: DEBUG, INFO, WARN, WARNING, ERROR, CRITICAL
+        # default: ERROR
+        LogLevel: ERROR
+  AcmeCertUpdaterAsteriskAWS:
+    Type: AWS::Serverless::Application
+    Properties:
+      Location:
+        ApplicationId: arn:aws:serverlessrepo:us-east-1:445285296882:applications/acme-cert-updater
+        SemanticVersion: 1.4.0
+      Parameters:
+        # S3 bucket name for saving the certificates (required)
+        BucketName: !Ref TenchoLabS3LetsEncryptCert
+        # Comma separated list of domains to update the certificates (required)
+        Domains: '*.aws.tencho-lab.net'
+        # Email address (required)
+        Email: bynn_chapu@tencho-lab.net
+        # Amazon Route 53 Hosted Zone ID (required)
+        HostedZone: !ImportValue Route53-AwsTenchoLabNetHostZoneId
+        # url for acme server
+        # default: https://acme-v02.api.letsencrypt.org/directory
+        AcmeServer: https://acme-v02.api.letsencrypt.org/directory
+        # execution environment
+        # allowed values: production, staging
+        # default: production
+        Environment: production
+        # Prefix of objects on S3 bucket.
+        # default: "" (no prefix)
+        Prefix: ""
+        # Log level
+        # allowed values: DEBUG, INFO, WARN, WARNING, ERROR, CRITICAL
+        # default: ERROR
+        LogLevel: ERROR
+
+  TenchoLabS3LetsEncryptCert:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub tencho-lab-letsencrypt-cert
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: True
+            ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: True
+        BlockPublicPolicy: True
+        IgnorePublicAcls: True 
+        RestrictPublicBuckets: True
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteTemporaryTemplate
+            Status: Enabled
+            ExpirationInDays: 3
+  TenchoLabS3LetsEncryptCertBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref TenchoLabS3LetsEncryptCert
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowSSLRequestsOnly # AWS Foundational Security Best Practices v1.0.0 S3.5
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+            - !GetAtt 'TenchoLabS3LetsEncryptCert.Arn'
+            - !Sub '${TenchoLabS3LetsEncryptCert.Arn}/*'
+            Condition:
+              Bool:
+                'aws:SecureTransport': false
