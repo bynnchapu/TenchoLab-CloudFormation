@@ -213,7 +213,7 @@ Resources:
                   "     UBUNTU_VERSION=$(cat /etc/issue | grep -i ubuntu | awk '{print $2}' |  awk -F'.' '{print $1}')",
                   "     sudo apt-get update",
                   "     if [ $(($UBUNTU_VERSION > 18)) == 1 ]; then",
-                  "       sudo DEBIAN_FRONTEND=noninteractive apt-get install python3-pip -y",
+                  "       sudo DEBIAN_FRONTEND=noninteractive apt-get install python3-pip awscli -y",
                   "       sudo pip3 install ansible --upgrade",
                   "     else",
                   "       sudo DEBIAN_FRONTEND=noninteractive apt-get install python-pip -y",
